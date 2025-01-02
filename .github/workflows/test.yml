@@ -26,7 +26,8 @@ jobs:
           poetry install
 
       - name: Run flake8
-        run: flake8
+        run: poetry run flake8
+
       - name: Run tests
         timeout-minutes: 5
-        run: python manage.py test
+        run: poetry run python manage.py test
