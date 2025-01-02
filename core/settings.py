@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "core.book_service",
+    "book_service",
 ]
 
 MIDDLEWARE = [
