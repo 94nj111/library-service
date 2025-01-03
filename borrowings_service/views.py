@@ -1,7 +1,12 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
+from django.utils import timezone
+from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from borrowings_service.models import Borrowing
 from borrowings_service.serializers import (
@@ -49,3 +54,32 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         book.inventory -= 1
         book.save()
         serializer.save(user=self.request.user)
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="return",
+    )
+    def return_book(self, request, pk=None):
+        borrowing = get_object_or_404(Borrowing, pk=pk)
+
+        if not borrowing.is_active:
+            raise ValidationError("This book has already been returned.")
+
+        if not request.user.is_staff and borrowing.user != request.user:
+            raise PermissionDenied(
+                "You don't have permission to return this book."
+            )
+
+        with transaction.atomic():
+            book = borrowing.book
+            book.inventory += 1
+            book.save()
+
+            borrowing.actual_return_date = timezone.now().date()
+            borrowing.save()
+
+        return Response(
+            self.get_serializer(borrowing).data,
+            status=status.HTTP_200_OK
+        )
