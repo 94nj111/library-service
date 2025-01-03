@@ -11,7 +11,7 @@ class BookSerializerTest(TestCase):
             "author": "Test Author",
             "cover": "HARD",
             "inventory": 10,
-            "daily_free": Decimal("9.99"),
+            "daily_fee": Decimal("9.99"),
         }
         self.book = Book.objects.create(**self.book_data)
         self.serializer = BookSerializer(instance=self.book)
@@ -20,10 +20,10 @@ class BookSerializerTest(TestCase):
         data = self.serializer.data
         self.assertEqual(
             set(data.keys()),
-            {"id", "title", "author", "cover", "inventory", "daily_free"},
+            {"id", "title", "author", "cover", "inventory", "daily_fee"},
         )
         self.assertEqual(data["title"], self.book_data["title"])
         self.assertEqual(data["author"], self.book_data["author"])
         self.assertEqual(data["cover"], self.book_data["cover"])
         self.assertEqual(data["inventory"], self.book_data["inventory"])
-        self.assertEqual(Decimal(data["daily_free"]), self.book_data["daily_free"])
+        self.assertEqual(Decimal(data["daily_fee"]), self.book_data["daily_fee"])

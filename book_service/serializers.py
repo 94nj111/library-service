@@ -12,5 +12,5 @@ class BookSerializer(serializers.ModelSerializer):
             "author",
             "cover",
             "inventory",
-            "daily_free",
+            "daily_fee",
         )
