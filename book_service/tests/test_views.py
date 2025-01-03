@@ -1,18 +1,27 @@
+from decimal import Decimal
+
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from book_service.models import Book
+from user.models import User
 
 
 class BookViewSetTest(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser",
+            email="testuser@example.com",
+            password="password123"
+        )
+        self.client.force_authenticate(user=self.user)
         self.book_data = {
             "title": "Test Book",
             "author": "Test Author",
             "cover": "HARD",
             "inventory": 10,
-            "daily_fee": "9.99",
+            "daily_fee": Decimal("9.99"),
         }
         self.book = Book.objects.create(**self.book_data)
         self.url = reverse("book_service:book-list")
@@ -22,13 +31,13 @@ class BookViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    def test_create_book(self):
+    def test_create_book_as_admin(self):
         new_book_data = {
             "title": "New Book",
             "author": "New Author",
             "cover": "SOFT",
             "inventory": 5,
-            "daily_fee": "14.99",
+            "daily_fee": Decimal("14.99"),
         }
         response = self.client.post(self.url, new_book_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
