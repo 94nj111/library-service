@@ -23,7 +23,7 @@ class PaymentModelTest(TestCase):
             borrow_date="2024-01-01",
             expected_return_date="2024-01-02",
             book=self.book,
-            user=self.user
+            user=self.user,
         )
         self.payment = Payment.objects.create(
             status="PENDING",
@@ -31,11 +31,11 @@ class PaymentModelTest(TestCase):
             borrowing=self.borrowing,
             session_url="https://example.com/payment",
             session_id="session_123456",
-            money_to_pay=Decimal("100.00")
+            money_to_pay=Decimal("100.00"),
         )
 
     def test_payment_creation(self):
-        """ Test if payment instance is created successfully. """
+        """Test if payment instance is created successfully."""
         self.assertEqual(self.payment.status, "PENDING")
         self.assertEqual(self.payment.type, "PAYMENT")
         self.assertEqual(self.payment.borrowing, self.borrowing)
@@ -44,29 +44,29 @@ class PaymentModelTest(TestCase):
         self.assertEqual(self.payment.money_to_pay, Decimal("100.00"))
 
     def test_payment_str_method(self):
-        """ Test the __str__ method of the Payment model. """
+        """Test the __str__ method of the Payment model."""
         self.assertEqual(str(self.payment), "Payment session_123456 (PENDING)")
 
     def test_payment_status_choices(self):
-        """ Test the status field choices. """
-        choices = dict(Payment._meta.get_field('status').choices)
+        """Test the status field choices."""
+        choices = dict(Payment._meta.get_field("status").choices)
         self.assertIn("PENDING", choices)
         self.assertIn("PAID", choices)
 
     def test_payment_type_choices(self):
-        """ Test the type field choices. """
-        choices = dict(Payment._meta.get_field('type').choices)
+        """Test the type field choices."""
+        choices = dict(Payment._meta.get_field("type").choices)
         self.assertIn("PAYMENT", choices)
         self.assertIn("FINE", choices)
 
     def test_money_to_pay_decimal_field(self):
-        """ Test that money_to_pay supports decimals correctly. """
+        """Test that money_to_pay supports decimals correctly."""
         self.payment.money_to_pay = Decimal("150.50")
         self.payment.save()
         self.assertEqual(self.payment.money_to_pay, Decimal("150.50"))
 
     def test_invalid_status(self):
-        """ Test if invalid status raises ValidationError. """
+        """Test if invalid status raises ValidationError."""
         with self.assertRaises(ValidationError):
             self.payment.status = "INVALID"
             self.payment.full_clean()

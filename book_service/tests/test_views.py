@@ -20,15 +20,13 @@ class BookViewSetTest(APITestCase):
         self.admin = get_user_model().objects.create_superuser(
             "admin@test.com", "adminpass"
         )
-        self.user = get_user_model().objects.create_user(
-            "user@test.com", "userpass"
-        )
+        self.user = get_user_model().objects.create_user("user@test.com", "userpass")
 
     def test_get_book_list(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        
+
     def test_create_book_unauthenticated(self):
         data = self.book_data
         response = self.client.post(self.url, data)
@@ -56,7 +54,7 @@ class BookViewSetTest(APITestCase):
         data = self.book_data
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-    
+
     def test_create_book_as_unauthenticated(self):
         data = self.book_data
         response = self.client.post(self.url, data)

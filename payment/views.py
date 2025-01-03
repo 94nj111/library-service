@@ -13,13 +13,14 @@ from payment.serializers import PaymentSerializer
 
 stripe.api_key = STRIPE_SECRET_KEY
 
+
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        """ Admin see all payments, user - only his own """
+        """Admin see all payments, user - only his own"""
 
         user = self.request.user
         if user.is_staff:
@@ -43,15 +44,17 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                         {
                             "price_data": {
                                 "currency": "usd",
-                                "product_data": {"name": f"Borrowing: {borrowing.book_title}"},
+                                "product_data": {
+                                    "name": f"Borrowing: {borrowing.book_title}"
+                                },
                                 "unit_amount": int(borrowing.total_price * 100),
                             },
                             "quantity": 1,
                         }
                     ],
                     mode="payment",
-                    success_url=request.build_absolute_uri(
-                        "/payment/success/") + "?session_id={CHECKOUT_SESSION_ID}",
+                    success_url=request.build_absolute_uri("/payment/success/")
+                    + "?session_id={CHECKOUT_SESSION_ID}",
                     cancel_url=request.build_absolute_uri("/payment/cancel/"),
                 )
 
@@ -63,7 +66,9 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     money_to_pay=borrowing.total_price,
                 )
 
-                return Response({"session_url": session.url, "session_id": session.id}, status=201)
+                return Response(
+                    {"session_url": session.url, "session_id": session.id}, status=201
+                )
 
         except stripe.error.StripeError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -74,7 +79,9 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         """
         session_id = request.query_params.get("session_id")
         if not session_id:
-            return Response({"error": "Session ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Session ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             session = stripe.checkout.Session.retrieve(session_id)
@@ -83,9 +90,15 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 payment.status = "PAID"
                 payment.save()
 
-                return Response({"message": "Payment successful", "session_id": session_id}, status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "Payment successful", "session_id": session_id},
+                    status=status.HTTP_200_OK,
+                )
 
-            return Response({"message": "Payment not completed yet"}, status=status.HTTP_202_ACCEPTED)
+            return Response(
+                {"message": "Payment not completed yet"},
+                status=status.HTTP_202_ACCEPTED,
+            )
 
         except stripe.error.StripeError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -93,7 +106,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         except Payment.DoesNotExist:
             return Response(
                 {"error": "Payment record not found for the provided session_id"},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     def cancel(self, request):
@@ -102,9 +115,14 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         """
         session_id = request.query_params.get("session_id")
         if not session_id:
-            return Response({"error": "Session ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Session ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         return Response(
-            {"message": "The payment can be made later, but the session is available for only 24 hours."},
-            status=status.HTTP_202_ACCEPTED
+            {
+                "message": "The payment can be made later,"
+                           " but the session is available for only 24 hours."
+            },
+            status=status.HTTP_202_ACCEPTED,
         )

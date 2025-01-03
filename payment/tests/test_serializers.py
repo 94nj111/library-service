@@ -22,7 +22,7 @@ class PaymentSerializerTests(APITestCase):
             borrow_date="2024-01-01",
             expected_return_date="2024-01-02",
             book=self.book,
-            user=self.user
+            user=self.user,
         )
         self.payment_data = {
             "status": "PENDING",
@@ -30,7 +30,7 @@ class PaymentSerializerTests(APITestCase):
             "borrowing": self.borrowing,
             "session_url": "https://example.com/session",
             "session_id": "123-session-id",
-            "money_to_pay": "50.00"
+            "money_to_pay": "50.00",
         }
 
     def test_payment_serializer_valid_data(self):
@@ -41,11 +41,11 @@ class PaymentSerializerTests(APITestCase):
                 "borrow_date": "2024-01-01",
                 "expected_return_date": "2024-01-02",
                 "book": self.book.id,
-                "user": self.user.id
+                "user": self.user.id,
             },
             "session_url": self.payment_data["session_url"],
             "session_id": self.payment_data["session_id"],
-            "money_to_pay": self.payment_data["money_to_pay"]
+            "money_to_pay": self.payment_data["money_to_pay"],
         }
 
         serializer = PaymentSerializer(data=data)
@@ -85,7 +85,7 @@ class PaymentSerializerTests(APITestCase):
             borrowing=self.borrowing,
             session_url="https://example.com/session",
             session_id="123-session-id",
-            money_to_pay="50.00"
+            money_to_pay="50.00",
         )
 
         serializer = PaymentSerializer(payment)

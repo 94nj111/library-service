@@ -12,9 +12,13 @@ PAYMENT_URL = reverse("payment:payment-list")
 
 class PaymentViewSetTests(APITestCase):
     def setUp(self):
-        self.admin = get_user_model().objects.create_superuser("admin@test.com", "adminpass")
+        self.admin = get_user_model().objects.create_superuser(
+            "admin@test.com", "adminpass"
+        )
         self.user = get_user_model().objects.create_user("user1@test.com", "userpass")
-        self.other_user = get_user_model().objects.create_user("user2@test.com", "userpass")
+        self.other_user = get_user_model().objects.create_user(
+            "user2@test.com", "userpass"
+        )
 
         self.book = Book.objects.create(
             title="Test Book",
@@ -35,13 +39,13 @@ class PaymentViewSetTests(APITestCase):
             borrow_date="2024-01-01",
             expected_return_date="2024-01-02",
             book=self.book,
-            user=self.user
+            user=self.user,
         )
         other_borrowing = Borrowing.objects.create(
             borrow_date="2024-01-01",
             expected_return_date="2024-01-02",
             book=self.other_book,
-            user=self.other_user
+            user=self.other_user,
         )
 
         self.payment = Payment.objects.create(
