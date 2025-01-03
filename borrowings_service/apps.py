@@ -6,4 +6,4 @@ class BorrowingsServiceConfig(AppConfig):
     name = "borrowings_service"
 
     def ready(self):
-        import borrowings_service.signals # noqa
+        import borrowings_service.signals  # noqa

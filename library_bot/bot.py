@@ -27,8 +27,10 @@ async def get_users():
 
 @bot.message_handler(commands=["start"])
 async def send_welcome(message):
-    text = ("Greetings, I'm a library bot and from now on I'll be sending you notifications about: \n"
-            " - new borrowing created, \n - borrowings overdue \n - successful payments")
+    text = (
+        "Greetings, I'm a library bot and from now on I'll be sending you notifications about: \n"
+        " - new borrowing created, \n - borrowings overdue \n - successful payments"
+    )
 
     if message.chat.id:
         await bot.send_message(message.chat.id, text=text)
