@@ -10,7 +10,7 @@ class BookModelTest(TestCase):
             "author": "Test Author",
             "cover": "HARD",
             "inventory": 10,
-            "daily_free": Decimal("9.99"),
+            "daily_fee": Decimal("9.99"),
         }
         self.book = Book.objects.create(**self.book_data)
 
@@ -23,4 +23,4 @@ class BookModelTest(TestCase):
         self.assertEqual(self.book.author, self.book_data["author"])
         self.assertEqual(self.book.cover, self.book_data["cover"])
         self.assertEqual(self.book.inventory, self.book_data["inventory"])
-        self.assertEqual(self.book.daily_free, self.book_data["daily_free"])
+        self.assertEqual(self.book.daily_fee, self.book_data["daily_fee"])

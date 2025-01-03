@@ -14,7 +14,7 @@ class Book(models.Model):
     inventory = (
         models.PositiveIntegerField()
     )  # Inventory – the number of this specific book available now in the library
-    daily_free = models.DecimalField(max_digits=10, decimal_places=2)
+    daily_fee = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         ordering = ["title"]
