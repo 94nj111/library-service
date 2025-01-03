@@ -74,3 +74,61 @@ class BorrowingViewsTests(APITestCase):
         response = self.client.get("/api/borrowings/?is_active=false")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+    def test_return_borrowing_success(self):
+        self.client.force_authenticate(user=self.user)
+        borrowing = Borrowing.objects.create(
+            borrow_date=timezone.now().date(),
+            expected_return_date=timezone.now().date() + timezone.timedelta(days=7),
+            book=self.book,
+            user=self.user,
+        )
+        initial_inventory = self.book.inventory
+        response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.inventory, initial_inventory + 1)
+        borrowing.refresh_from_db()
+        self.assertIsNotNone(borrowing.actual_return_date)
+
+    def test_return_borrowing_already_returned(self):
+        self.client.force_authenticate(user=self.user)
+        borrowing = Borrowing.objects.create(
+            borrow_date=timezone.now().date(),
+            expected_return_date=timezone.now().date() + timezone.timedelta(days=7),
+            actual_return_date=timezone.now().date(),
+            book=self.book,
+            user=self.user,
+        )
+        response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_return_borrowing_unauthorized_user(self):
+        self.client.force_authenticate(user=self.user)
+        other_user = User.objects.create_user(
+            email="other@example.com", password="password123"
+        )
+        borrowing = Borrowing.objects.create(
+            borrow_date=timezone.now().date(),
+            expected_return_date=timezone.now().date() + timezone.timedelta(days=7),
+            book=self.book,
+            user=other_user,
+        )
+        response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_return_borrowing_admin_success(self):
+        self.client.force_authenticate(user=self.admin)
+        borrowing = Borrowing.objects.create(
+            borrow_date=timezone.now().date(),
+            expected_return_date=timezone.now().date() + timezone.timedelta(days=7),
+            book=self.book,
+            user=self.user,
+        )
+        initial_inventory = self.book.inventory
+        response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.inventory, initial_inventory + 1)
+        borrowing.refresh_from_db()
+        self.assertIsNotNone(borrowing.actual_return_date)
