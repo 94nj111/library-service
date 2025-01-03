@@ -11,6 +11,8 @@ from payment.models import Payment, Borrowing
 from payment.serializers import PaymentSerializer
 
 
+stripe.api_key = STRIPE_SECRET_KEY
+
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
@@ -23,14 +25,6 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         if user.is_staff:
             return Payment.objects.all()
         return Payment.objects.filter(borrowing__user=user)
-
-
-stripe.api_key = STRIPE_SECRET_KEY
-
-class StripePaymentViewSet(viewsets.ViewSet):
-    """
-        ViewSet for handling Stripe payments.
-    """
 
     def create_session(self, request, borrowing_id=None):
         """
@@ -56,7 +50,8 @@ class StripePaymentViewSet(viewsets.ViewSet):
                         }
                     ],
                     mode="payment",
-                    success_url=request.build_absolute_uri("/payment/success/") + "?session_id={CHECKOUT_SESSION_ID}",
+                    success_url=request.build_absolute_uri(
+                        "/payment/success/") + "?session_id={CHECKOUT_SESSION_ID}",
                     cancel_url=request.build_absolute_uri("/payment/cancel/"),
                 )
 
@@ -73,44 +68,43 @@ class StripePaymentViewSet(viewsets.ViewSet):
         except stripe.error.StripeError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    def success(self, request):
+        """
+        Handle successful payment callback.
+        """
+        session_id = request.query_params.get("session_id")
+        if not session_id:
+            return Response({"error": "Session ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-def success(self, request):
-    """
-    Handle successful payment callback.
-    """
-    session_id = request.query_params.get("session_id")
-    if not session_id:
-        return Response({"error": "Session ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
+            if session.payment_status == "paid":
+                payment = Payment.objects.get(session_id=session_id)
+                payment.status = "PAID"
+                payment.save()
 
-    try:
-        session = stripe.checkout.Session.retrieve(session_id)
-        if session.payment_status == "paid":
-            payment = Payment.objects.get(session_id=session_id)
-            payment.status = "PAID"
-            payment.save()
+                return Response({"message": "Payment successful", "session_id": session_id}, status=status.HTTP_200_OK)
 
-            return Response({"message": "Payment successful", "session_id": session_id}, status=status.HTTP_200_OK)
+            return Response({"message": "Payment not completed yet"}, status=status.HTTP_202_ACCEPTED)
 
-        return Response({"message": "Payment not completed yet"}, status=status.HTTP_202_ACCEPTED)
+        except stripe.error.StripeError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    except stripe.error.StripeError as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Payment.DoesNotExist:
+            return Response(
+                {"error": "Payment record not found for the provided session_id"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    except Payment.DoesNotExist:
+    def cancel(self, request):
+        """
+        Handle payment cancellation callback.
+        """
+        session_id = request.query_params.get("session_id")
+        if not session_id:
+            return Response({"error": "Session ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(
-            {"error": "Payment record not found for the provided session_id"},
-            status=status.HTTP_404_NOT_FOUND
+            {"message": "The payment can be made later, but the session is available for only 24 hours."},
+            status=status.HTTP_202_ACCEPTED
         )
-
-def cancel(self, request):
-    """
-    Handle payment cancellation callback.
-    """
-    session_id = request.query_params.get("session_id")
-    if not session_id:
-        return Response({"error": "Session ID is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-    return Response(
-        {"message": "The payment can be made later, but the session is available for only 24 hours."},
-        status=status.HTTP_202_ACCEPTED
-    )

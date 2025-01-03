@@ -2,12 +2,10 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from borrowings_service.models import Borrowing
-from payment.serializers import PaymentSerializer
 
 
 class BorrowingSerializer(serializers.ModelSerializer):
     book_details = serializers.SerializerMethodField()
-    payments = PaymentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Borrowing
@@ -20,7 +18,6 @@ class BorrowingSerializer(serializers.ModelSerializer):
             "user",
             "is_active",
             "book_details",
-            "payments",
         ]
 
     def get_book_details(self, obj):
