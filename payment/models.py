@@ -1,6 +1,5 @@
 from django.db import models
 
-
 STATUS_CHOICES = (
     ("PENDING", "Pending"),
     ("PAID", "Paid"),
@@ -10,6 +9,7 @@ TYPE_CHOICES = (
     ("PAYMENT", "Payment"),
     ("FINE", "Fine"),
 )
+
 
 class Payment(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
