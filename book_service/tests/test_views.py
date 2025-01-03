@@ -12,7 +12,7 @@ class BookViewSetTest(APITestCase):
             "author": "Test Author",
             "cover": "HARD",
             "inventory": 10,
-            "daily_free": "9.99",
+            "daily_fee": "9.99",
         }
         self.book = Book.objects.create(**self.book_data)
         self.url = reverse("book_service:book-list")
@@ -28,7 +28,7 @@ class BookViewSetTest(APITestCase):
             "author": "New Author",
             "cover": "SOFT",
             "inventory": 5,
-            "daily_free": "14.99",
+            "daily_fee": "14.99",
         }
         response = self.client.post(self.url, new_book_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -51,7 +51,7 @@ class BookViewSetTest(APITestCase):
             "author": self.book.author,
             "cover": self.book.cover,
             "inventory": self.book.inventory,
-            "daily_free": str(self.book.daily_free),
+            "daily_fee": str(self.book.daily_fee),
         }
         response = self.client.put(url, updated_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
