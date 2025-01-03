@@ -58,7 +58,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     cancel_url=request.build_absolute_uri("/payment/cancel/"),
                 )
 
-                payment = Payment.objects.create(
+                Payment.objects.create(
                     borrowing=borrowing,
                     session_id=session.id,
                     session_url=session.url,
