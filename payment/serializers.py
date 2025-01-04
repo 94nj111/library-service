@@ -4,9 +4,7 @@ from .models import Payment
 
 
 class PaymentSerializer(serializers.ModelSerializer):
-    user_email = serializers.CharField(
-        source="borrowing.user.email"
-    )
+    user_email = serializers.CharField(source="borrowing.user.email")
 
     class Meta:
         model = Payment

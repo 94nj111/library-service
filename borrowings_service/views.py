@@ -7,6 +7,7 @@ from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
 from borrowings_service.models import Borrowing
 from borrowings_service.serializers import (
@@ -15,6 +16,37 @@ from borrowings_service.serializers import (
 )
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="List Borrowings",
+        description="Get a list of borrowings",
+        parameters=[
+            OpenApiParameter(
+                name="is_active",
+                description="Filter by active status",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="user_id",
+                description="Filter by user ID",
+                required=False,
+                type=int,
+            ),
+        ],
+    ),
+    create=extend_schema(
+        summary="Create Borrowing", description="Create a new borrowing"
+    ),
+    retrieve=extend_schema(
+        summary="Get Borrowing", description="Get details of a borrowing"
+    ),
+    update=extend_schema(summary="Update Borrowing", description="Update a borrowing"),
+    partial_update=extend_schema(
+        summary="Partial Update Borrowing", description="Partially update a borrowing"
+    ),
+    destroy=extend_schema(summary="Delete Borrowing", description="Delete a borrowing"),
+)
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
     serializer_class = BorrowingSerializer
@@ -55,6 +87,11 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         book.save()
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        summary="Return Borrowed Book",
+        description="Mark a borrowed book as returned and update inventory.",
+        responses={200: BorrowingSerializer},
+    )
     @action(
         methods=["POST"],
         detail=True,
