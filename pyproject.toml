@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "library-service"
+version = "0.1.0"
+description = ""
+authors = ["Dmytro <94nj111@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^5.1.4"
+djangorestframework = "^3.15.2"
+djangorestframework-simplejwt = "^5.3.1"
+flake8 = "^7.1.1"
+django-filter = "^24.3"
+django-redis = "^5.4.0"
+psycopg2-binary = "^2.9.10"
+redis = "^5.2.1"
+stripe = "^11.4.1"
+python-dotenv = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
