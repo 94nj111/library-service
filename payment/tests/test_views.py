@@ -35,13 +35,13 @@ class PaymentViewSetTests(APITestCase):
             daily_fee="19.99",
         )
 
-        borrowing = Borrowing.objects.create(
+        self.borrowing = Borrowing.objects.create(
             borrow_date="2024-01-01",
             expected_return_date="2024-01-02",
             book=self.book,
             user=self.user,
         )
-        other_borrowing = Borrowing.objects.create(
+        self.other_borrowing = Borrowing.objects.create(
             borrow_date="2024-01-01",
             expected_return_date="2024-01-02",
             book=self.other_book,
@@ -51,7 +51,7 @@ class PaymentViewSetTests(APITestCase):
         self.payment = Payment.objects.create(
             status="PENDING",
             type="PAYMENT",
-            borrowing=borrowing,
+            borrowing=self.borrowing,
             session_url="http://example.com",
             session_id="123",
             money_to_pay=10.00,
@@ -59,7 +59,7 @@ class PaymentViewSetTests(APITestCase):
         self.other_payment = Payment.objects.create(
             status="PAID",
             type="FINE",
-            borrowing=other_borrowing,
+            borrowing=self.other_borrowing,
             session_url="http://example.com",
             session_id="456",
             money_to_pay=15.00,
@@ -101,8 +101,9 @@ class PaymentViewSetTests(APITestCase):
 
     def test_create_stripe_session(self):
         self.client.force_authenticate(user=self.user)
+        borrowing_id = self.borrowing.id
         response = self.client.post(
-            "http://localhost:8000/api/payments/payments/1/create-session/"
+            f"http://localhost:8000/api/payments/payments/{borrowing_id}/create-session/"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -118,8 +119,9 @@ class PaymentViewSetTests(APITestCase):
 
     def test_successful_payment(self):
         self.client.force_authenticate(user=self.user)
+        borrowing_id = self.borrowing.id
         response = self.client.post(
-            "http://localhost:8000/api/payments/payments/1/create-session/"
+            f"http://localhost:8000/api/payments/payments/{borrowing_id}/create-session/"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         session_id = response.data["session_id"]
