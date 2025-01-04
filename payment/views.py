@@ -1,7 +1,9 @@
 import stripe
-from drf_spectacular.utils import extend_schema
 
-from rest_framework import viewsets, status
+from drf_spectacular.utils import extend_schema
+from decimal import Decimal
+from rest_framework import status, mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -21,7 +23,9 @@ stripe.api_key = STRIPE_SECRET_KEY
     request=None,
     responses={201: PaymentSerializer},
 )
-class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
+class PaymentViewSet(mixins.ListModelMixin,
+                     mixins.CreateModelMixin,
+                     viewsets.GenericViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated,)
@@ -34,17 +38,20 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
             return Payment.objects.all()
         return Payment.objects.filter(borrowing__user=user)
 
-    def create_session(self, request, borrowing_id=None):
+    @action(detail=True, methods=["post"], url_path="create-session")
+    def create_session(self, request, pk=None):
         """
         Create a Stripe payment session for a specific borrowing.
         """
-        borrowing = get_object_or_404(Borrowing, id=borrowing_id)
+        borrowing = get_object_or_404(Borrowing, id=pk)
 
         try:
             with transaction.atomic():
-                is_fine = borrowing.actual_return_date > borrowing.expected_return_date
+                is_fine = False
+                if borrowing.actual_return_date:
+                    is_fine = borrowing.actual_return_date > borrowing.expected_return_date
                 payment_type = "FINE" if is_fine else "PAYMENT"
-
+                amount = Decimal(borrowing.book.daily_fee * (borrowing.expected_return_date - borrowing.borrow_date).days)
                 session = stripe.checkout.Session.create(
                     payment_method_types=["card"],
                     line_items=[
@@ -52,17 +59,17 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                             "price_data": {
                                 "currency": "usd",
                                 "product_data": {
-                                    "name": f"Borrowing: {borrowing.book_title}"
+                                    "name": f"Borrowing: {borrowing.book.title}"
                                 },
-                                "unit_amount": int(borrowing.total_price * 100),
+                                "unit_amount": int(amount * 100)
                             },
                             "quantity": 1,
                         }
                     ],
                     mode="payment",
-                    success_url=request.build_absolute_uri("/payment/success/")
+                    success_url=request.build_absolute_uri("/payments/success/")
                     + "?session_id={CHECKOUT_SESSION_ID}",
-                    cancel_url=request.build_absolute_uri("/payment/cancel/"),
+                    cancel_url=request.build_absolute_uri("/payments/cancel/"),
                 )
 
                 Payment.objects.create(
@@ -70,7 +77,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                     session_id=session.id,
                     session_url=session.url,
                     type=payment_type,
-                    money_to_pay=borrowing.total_price,
+                    money_to_pay=amount,
                 )
 
                 return Response(
@@ -80,6 +87,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         except stripe.error.StripeError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=["get"], url_path="success")
     def success(self, request):
         """
         Handle successful payment callback.
@@ -116,6 +124,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+    @action(detail=False, methods=["get"], url_path="cancel")
     def cancel(self, request):
         """
         Handle payment cancellation callback.
