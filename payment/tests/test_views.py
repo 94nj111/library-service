@@ -153,7 +153,8 @@ class PaymentViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(
             response.data["message"],
-            "The payment can be made later, but the session is available for only 24 hours.",
+            "The payment can be made later, "
+            "but the session is available for only 24 hours.",
         )
 
     def test_cancel_payment_without_session_id(self):
