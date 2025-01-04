@@ -11,17 +11,26 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
+
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv()
+
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-2ge!m5+o!ct1!fwj(#2_)^7d8u_=_++z8$56pdge1s%udc!t@h")
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-2ge!m5+o!ct1!fwj(#2_)^7d8u_=_++z8$56pdge1s%udc!t@h"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -155,6 +164,6 @@ CACHES = {
         "LOCATION": "redis://redis/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }

@@ -67,9 +67,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             raise ValidationError("This book has already been returned.")
 
         if not request.user.is_staff and borrowing.user != request.user:
-            raise PermissionDenied(
-                "You don't have permission to return this book."
-            )
+            raise PermissionDenied("You don't have permission to return this book.")
 
         with transaction.atomic():
             book = borrowing.book
@@ -79,7 +77,4 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             borrowing.actual_return_date = timezone.now().date()
             borrowing.save()
 
-        return Response(
-            self.get_serializer(borrowing).data,
-            status=status.HTTP_200_OK
-        )
+        return Response(self.get_serializer(borrowing).data, status=status.HTTP_200_OK)
