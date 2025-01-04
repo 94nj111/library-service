@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "django_filters",
     "book_service",
     "user",
@@ -197,4 +198,3 @@ else:
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
             },
         }
-    }
