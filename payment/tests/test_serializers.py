@@ -37,12 +37,7 @@ class PaymentSerializerTests(APITestCase):
         data = {
             "status": self.payment_data["status"],
             "type": self.payment_data["type"],
-            "borrowing": {
-                "borrow_date": "2024-01-01",
-                "expected_return_date": "2024-01-02",
-                "book": self.book.id,
-                "user": self.user.id,
-            },
+            "user_email": self.user.email,
             "session_url": self.payment_data["session_url"],
             "session_id": self.payment_data["session_id"],
             "money_to_pay": self.payment_data["money_to_pay"],
