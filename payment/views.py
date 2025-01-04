@@ -1,4 +1,5 @@
 import stripe
+from drf_spectacular.utils import extend_schema
 
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
@@ -14,6 +15,12 @@ from payment.serializers import PaymentSerializer
 stripe.api_key = STRIPE_SECRET_KEY
 
 
+@extend_schema(
+    summary="Create Payment Session",
+    description="Create a Stripe payment session for borrowing",
+    request=None,
+    responses={201: PaymentSerializer},
+)
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
