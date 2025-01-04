@@ -1,5 +1,5 @@
 services:
-  cinema_service:
+  library_service:
     build:
       context: .
     env_file:

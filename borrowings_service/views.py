@@ -2,7 +2,6 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from django.utils import timezone
 from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -10,6 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
+from django.utils import timezone
 
 from borrowings_service.models import Borrowing
 from borrowings_service.serializers import (
