@@ -25,6 +25,7 @@ stripe.api_key = STRIPE_SECRET_KEY
 )
 class PaymentViewSet(mixins.ListModelMixin,
                      mixins.CreateModelMixin,
+                     mixins.RetrieveModelMixin,
                      viewsets.GenericViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
