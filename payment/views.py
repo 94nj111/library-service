@@ -122,7 +122,7 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(
             {
                 "message": "The payment can be made later,"
-                           " but the session is available for only 24 hours."
+                " but the session is available for only 24 hours."
             },
             status=status.HTTP_202_ACCEPTED,
         )
