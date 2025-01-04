@@ -16,6 +16,7 @@ from borrowings_service.serializers import (
     BorrowingSerializer,
     BorrowingCreateSerializer,
 )
+from borrowings_service.services import validate_user_payments
 
 
 @extend_schema_view(
@@ -84,6 +85,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         return BorrowingSerializer
 
     def perform_create(self, serializer):
+        validate_user_payments(self.request)
         book = serializer.validated_data["book"]
         book.inventory -= 1
         book.save()

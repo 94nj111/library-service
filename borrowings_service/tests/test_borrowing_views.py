@@ -5,6 +5,10 @@ from borrowings_service.models import Borrowing
 from book_service.models import Book
 from django.contrib.auth import get_user_model
 
+from decimal import Decimal
+
+from payment.models import Payment
+
 User = get_user_model()
 
 
@@ -39,6 +43,29 @@ class BorrowingViewsTests(APITestCase):
         }
         response = self.client.post("/api/borrowings/", data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_borrowing_when_user_have_pending(self):
+        user = User.objects.create_user(email="user@user.com", password="password123")
+        borrowing = Borrowing.objects.create(
+            expected_return_date=timezone.now().date() + timezone.timedelta(days=7),
+            book=self.book,
+            user=user,
+        )
+        payment = Payment.objects.create(
+            status="PENDING",
+            type="PAYMENT",
+            borrowing=borrowing,
+            session_url="url",
+            session_id="id",
+            money_to_pay=Decimal("10"),
+        )
+        self.client.force_authenticate(user=user)
+        data = {
+            "expected_return_date": timezone.now().date() + timezone.timedelta(days=7),
+            "book": self.book.id,
+        }
+        response = self.client.post("/api/borrowings/", data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_permission_for_admin(self):
         self.client.force_authenticate(user=self.admin)
