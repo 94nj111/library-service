@@ -19,6 +19,8 @@ redis = "^5.2.1"
 stripe = "^11.4.1"
 python-dotenv = "^1.0.1"
 drf-spectacular = "^0.28.0"
+django-celery-beat = "^2.7.0"
+celery = "^5.4.0"
 
 
 [build-system]
