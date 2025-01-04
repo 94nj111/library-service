@@ -98,3 +98,69 @@ class PaymentViewSetTests(APITestCase):
     def test_anonymous_user_cannot_access_payments(self):
         response = self.client.get(PAYMENT_URL)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_stripe_session(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "http://localhost:8000/api/payments/payments/1/create-session/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertIn("session_url", response.data)
+        self.assertIn("session_id", response.data)
+
+    def test_create_stripe_session_for_non_existing_borrowing(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "http://localhost:8000/api/payments/payments/999/create-session/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_successful_payment(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "http://localhost:8000/api/payments/payments/1/create-session/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        session_id = response.data["session_id"]
+        response = self.client.get(
+            f"http://localhost:8000/api/payments/payments/success/?session_id={session_id}"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        if response.status_code == status.HTTP_202_ACCEPTED:
+            payment = Payment.objects.get(session_id=session_id)
+            self.assertEqual(payment.status, "PENDING")
+        if response.status_code == status.HTTP_200_OK:
+            payment = Payment.objects.get(session_id=session_id)
+            self.assertEqual(payment.status, "PAID")
+
+    def test_successful_payment_without_session_id(self):
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            "http://localhost:8000/api/payments/payments/success/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data.get("error"), "Session ID is required")
+
+    def test_cancel_payment(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            "http://localhost:8000/api/payments/payments/cancel/",
+            {"session_id": self.payment.session_id},
+        )
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(
+            response.data["message"],
+            "The payment can be made later, but the session is available for only 24 hours.",
+        )
+
+    def test_cancel_payment_without_session_id(self):
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            "http://localhost:8000/api/payments/payments/cancel/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Session ID is required", str(response.data))
