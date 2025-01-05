@@ -1,6 +1,8 @@
+from decimal import Decimal
 from unittest.mock import patch
 
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
@@ -8,7 +10,7 @@ from django.contrib.auth import get_user_model
 from book_service.models import Book
 from borrowings_service.models import Borrowing
 from payment.models import Payment
-
+from payment.views import FINE_MULTIPLIER
 
 PAYMENT_URL = reverse("payments:payments-list")
 
@@ -29,28 +31,29 @@ class PaymentViewSetTests(APITestCase):
             author="Test Author",
             cover="HARD",
             inventory=10,
-            daily_fee="9.99",
+            daily_fee=Decimal("9.99"),
         )
         self.other_book = Book.objects.create(
             title="Test Other Book",
             author="Test Other Author",
             cover="SOFT",
             inventory=20,
-            daily_fee="19.99",
+            daily_fee=Decimal("9.99"),
         )
 
         self.borrowing = Borrowing.objects.create(
-            borrow_date="2024-01-01",
-            expected_return_date="2024-01-02",
+            borrow_date=timezone.now().date() - timezone.timedelta(days=5),
+            expected_return_date=timezone.now().date() - timezone.timedelta(days=4),
             book=self.book,
             user=self.user,
         )
         self.other_borrowing = Borrowing.objects.create(
-            borrow_date="2024-01-01",
-            expected_return_date="2024-01-02",
+            borrow_date=timezone.now().date() - timezone.timedelta(days=5),
+            expected_return_date=timezone.now().date() - timezone.timedelta(days=4),
             book=self.other_book,
             user=self.other_user,
         )
+        self.url = reverse("borrowings:borrowing-return-book", kwargs={"pk": self.borrowing.pk})
 
         self.payment = Payment.objects.create(
             status="PENDING",
@@ -58,7 +61,7 @@ class PaymentViewSetTests(APITestCase):
             borrowing=self.borrowing,
             session_url="http://example.com",
             session_id="123",
-            money_to_pay=10.00,
+            money_to_pay=Decimal("10.00"),
         )
         self.other_payment = Payment.objects.create(
             status="PAID",
@@ -66,7 +69,7 @@ class PaymentViewSetTests(APITestCase):
             borrowing=self.other_borrowing,
             session_url="http://example.com",
             session_id="456",
-            money_to_pay=15.00,
+            money_to_pay=Decimal("15.00"),
         )
 
     def test_admin_can_view_all_payments(self):
@@ -171,3 +174,29 @@ class PaymentViewSetTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Session ID is required", str(response.data))
+
+    def test_fine_created_for_overdue_return(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertIn(reverse("payments:payments-create-session", kwargs={"pk": self.borrowing.pk}), response.url)
+        response = self.client.post(response.url)
+
+        fine_payment = Payment.objects.filter(borrowing=self.borrowing).last()
+        self.assertEqual(fine_payment.type, "FINE")
+
+        overdue_days = (timezone.now().date() - self.borrowing.expected_return_date).days
+        expected_amount = Decimal(self.book.daily_fee * overdue_days * FINE_MULTIPLIER)
+        self.assertEqual(fine_payment.money_to_pay, expected_amount)
+
+    def test_no_fine_for_on_time_return(self):
+        self.client.force_authenticate(user=self.user)
+        self.borrowing.expected_return_date = timezone.now().date()
+        self.borrowing.save()
+
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Payment.objects.filter(borrowing=self.borrowing).exists())
