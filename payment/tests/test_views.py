@@ -7,8 +7,8 @@ from book_service.models import Book
 from borrowings_service.models import Borrowing
 from payment.models import Payment
 
-PAYMENT_URL = reverse("payment:payment-list")
 
+PAYMENT_URL = reverse("payments:payments-list")
 
 class PaymentViewSetTests(APITestCase):
     def setUp(self):
@@ -80,7 +80,7 @@ class PaymentViewSetTests(APITestCase):
     def test_user_cannot_view_others_payment(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("payment:payment-detail", kwargs={"pk": self.other_payment.id})
+            reverse("payments:payments-detail", kwargs={"pk": self.other_payment.id})
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -90,7 +90,7 @@ class PaymentViewSetTests(APITestCase):
         """
         self.client.force_authenticate(user=self.admin)
         response = self.client.get(
-            reverse("payment:payment-detail", kwargs={"pk": self.other_payment.id})
+            reverse("payments:payments-detail", kwargs={"pk": self.other_payment.id})
         )
         reverse("book_service:book-detail", kwargs={"pk": self.book.pk})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -103,7 +103,7 @@ class PaymentViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         borrowing_id = self.borrowing.id
         response = self.client.post(
-            f"/api/payments/payments/{borrowing_id}/create-session/"
+            reverse("payments:payments-create-session", kwargs={"pk": borrowing_id})
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -121,7 +121,7 @@ class PaymentViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         borrowing_id = self.borrowing.id
         response = self.client.post(
-            f"/api/payments/payments/{borrowing_id}/create-session/"
+            reverse("payments:payments-create-session", kwargs={"pk": borrowing_id})
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         session_id = response.data["session_id"]
