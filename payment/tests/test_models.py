@@ -1,4 +1,5 @@
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -10,7 +11,8 @@ from payment.models import Payment
 
 
 class PaymentModelTest(TestCase):
-    def setUp(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def setUp(self, mock_signal):
         self.user = get_user_model().objects.create_user("user1@test.com", "userpass")
         self.book = Book.objects.create(
             title="Test Book",

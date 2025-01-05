@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     "user",
     "borrowings_service",
     "payment",
+    "library_bot",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -195,3 +197,8 @@ else:
             },
         },
     }
+
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND_URL")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"

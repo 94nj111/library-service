@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from django.db import transaction
 
 from core.settings import STRIPE_SECRET_KEY
+from library_bot.bot import send_notification_on_success_payment
 from payment.models import Payment, Borrowing
 from payment.serializers import PaymentSerializer
 
@@ -114,6 +115,8 @@ class PaymentViewSet(
                 payment = Payment.objects.get(session_id=session_id)
                 payment.status = "PAID"
                 payment.save()
+
+                send_notification_on_success_payment(payment)
 
                 return Response(
                     {"message": "Payment successful", "session_id": session_id},
