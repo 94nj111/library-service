@@ -101,8 +101,9 @@ class PaymentViewSetTests(APITestCase):
 
     def test_create_stripe_session(self):
         self.client.force_authenticate(user=self.user)
+        borrowing_id = self.borrowing.id
         response = self.client.post(
-            f"/api/payments/payments/1/create-session/"
+            f"/api/payments/payments/{borrowing_id}/create-session/"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -118,8 +119,9 @@ class PaymentViewSetTests(APITestCase):
 
     def test_successful_payment(self):
         self.client.force_authenticate(user=self.user)
+        borrowing_id = self.borrowing.id
         response = self.client.post(
-            f"/api/payments/payments/1/create-session/"
+            f"/api/payments/payments/{borrowing_id}/create-session/"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         session_id = response.data["session_id"]
