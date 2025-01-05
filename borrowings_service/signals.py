@@ -1,12 +1,14 @@
 from datetime import datetime
 
+from celery import shared_task
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from borrowings_service.models import Borrowing
 
 
+@shared_task
 @receiver(post_save, sender=Borrowing)
-async def send_notification_on_borrowing_created(sender, instance, created, **kwargs):
+def send_notification_on_borrowing_created(sender, instance, created, **kwargs):
     if created:
         from library_bot.bot import bot, get_users
 
@@ -19,5 +21,5 @@ async def send_notification_on_borrowing_created(sender, instance, created, **kw
             f"User email: {instance.user.email}"
         )
 
-        for user_id in await get_users():
-            await bot.send_message(user_id, text)
+        for user_id in get_users():
+            bot.send_message(user_id, text)
