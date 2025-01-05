@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from core.settings import STRIPE_SECRET_KEY
+from library_bot.bot import send_notification_on_success_payment
 from payment.models import Payment, Borrowing
 from payment.serializers import PaymentSerializer
 
@@ -121,6 +122,8 @@ class PaymentViewSet(
                 payment.save()
                 if payment.borrowing.expected_return_date < timezone.now().date():
                     payment.borrowing.actual_return_date = timezone.now().date()
+
+                send_notification_on_success_payment(payment)
 
                 return Response(
                     {"message": "Payment successful", "session_id": session_id},

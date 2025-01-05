@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.utils import timezone
 from borrowings_service.models import Borrowing
@@ -13,8 +15,8 @@ User = get_user_model()
 
 
 class BorrowingSerializerTests(TestCase):
-
-    def setUp(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def setUp(self, mock_signal):
         self.user = User.objects.create_user(
             email="test3@example.com", password="password123"
         )
