@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get("TELEGRAM_TOKEN")
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -81,7 +81,7 @@ def send_notification_on_borrowing_overdue():
 
     messages = get_text_about_overdue_borrowings()
 
-    if len(messages) < 40:
+    if len(messages[0]) < 40:
         for user_id in user_ids:
             bot.send_message(user_id, "No borrowings overdue today!")
             time.sleep(0.25)
@@ -90,22 +90,6 @@ def send_notification_on_borrowing_overdue():
             for message in messages:
                 bot.send_message(user_id, message)
                 time.sleep(0.25)
-
-
-def send_notification_on_borrowing_created(sender, instance, created, **kwargs):
-    if created:
-
-        borrow_date = datetime.strftime(instance.borrow_date, "%Y-%m-%d %H:%M:%S")
-        text = (
-            f"New borrowing was created:\n"
-            f"Borrow date: {borrow_date}\n"
-            f"Expected return date: {instance.expected_return_date}\n"
-            f"Book: {instance.book.title}\n"
-            f"User email: {instance.user.email}"
-        )
-
-        for user_id in get_users():
-            bot.send_message(user_id, text)
 
 
 async def poll():
