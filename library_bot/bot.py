@@ -55,9 +55,8 @@ def get_text_about_overdue_borrowings():
     messages = []
 
     text = "Such borrows was overdue:\n"
-    for borrow in (
-            Borrowing.objects.select_related("book", "user")
-            .filter(expected_return_date__lte=timezone.now().date())
+    for borrow in Borrowing.objects.select_related("book", "user").filter(
+        expected_return_date__lte=timezone.now().date()
     ):
         if borrow:
             borrow_message = (
@@ -94,6 +93,7 @@ def send_notification_on_borrowing_overdue():
 
 async def poll():
     await bot.polling()
+
 
 if __name__ == "__main__":
     asyncio.run(poll())
