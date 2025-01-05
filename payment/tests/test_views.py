@@ -156,7 +156,7 @@ class PaymentViewSetTests(APITestCase):
         self.assertEqual(
             response.data["message"],
             "The payment can be made later, "
-            "but the session is available for only 24 hours.",
+            "but the session is available for only 24 hours!",
         )
 
     def test_cancel_payment_without_session_id(self):
