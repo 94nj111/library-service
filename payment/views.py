@@ -4,18 +4,15 @@ import stripe
 from django.db import transaction
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
-from decimal import Decimal
 from rest_framework import status, mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db import transaction
 
 from core.settings import STRIPE_SECRET_KEY
 from payment.models import Payment, Borrowing
 from payment.serializers import PaymentSerializer
-
 
 stripe.api_key = STRIPE_SECRET_KEY
 FINE_MULTIPLIER = 2
@@ -99,8 +96,7 @@ class PaymentViewSet(
                 )
 
                 return Response(
-                    {"session_url": session.url, "session_id": session.id},
-                    status=status.HTTP_201_CREATED,
+                    {"session_url": session.url, "session_id": session.id}, status=status.HTTP_201_CREATED
                 )
 
         except stripe.error.StripeError as e:
