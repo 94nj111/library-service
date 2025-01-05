@@ -113,7 +113,7 @@ class PaymentViewSetTests(APITestCase):
     def test_create_stripe_session_for_non_existing_borrowing(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            "http://localhost:8000/api/payments/payments/999/create-session/"
+            "/api/payments/payments/999/create-session/"
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -126,7 +126,7 @@ class PaymentViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         session_id = response.data["session_id"]
         response = self.client.get(
-            f"http://localhost:8000/api/payments/payments/success/?session_id={session_id}"
+            f"/api/payments/payments/success/?session_id={session_id}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -141,7 +141,7 @@ class PaymentViewSetTests(APITestCase):
 
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            "http://localhost:8000/api/payments/payments/success/"
+            "/api/payments/payments/success/"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data.get("error"), "Session ID is required")
@@ -149,7 +149,7 @@ class PaymentViewSetTests(APITestCase):
     def test_cancel_payment(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            "http://localhost:8000/api/payments/payments/cancel/",
+            "/api/payments/payments/cancel/",
             {"session_id": self.payment.session_id},
         )
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -163,7 +163,7 @@ class PaymentViewSetTests(APITestCase):
 
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            "http://localhost:8000/api/payments/payments/cancel/"
+            "/api/payments/payments/cancel/"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Session ID is required", str(response.data))
