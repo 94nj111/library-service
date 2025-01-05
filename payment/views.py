@@ -1,5 +1,8 @@
-import stripe
+from decimal import Decimal
 
+import stripe
+from django.db import transaction
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from decimal import Decimal
 from rest_framework import status, mixins, viewsets
@@ -15,6 +18,7 @@ from payment.serializers import PaymentSerializer
 
 
 stripe.api_key = STRIPE_SECRET_KEY
+FINE_MULTIPLIER = 2
 
 
 @extend_schema(
@@ -27,7 +31,7 @@ class PaymentViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.GenericViewSet
 ):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
@@ -51,15 +55,20 @@ class PaymentViewSet(
         try:
             with transaction.atomic():
                 is_fine = False
-                if borrowing.actual_return_date:
-                    is_fine = (
-                        borrowing.actual_return_date > borrowing.expected_return_date
-                    )
+                fine_amount = Decimal(0)
+                actual_date = timezone.now().date()
+
+                if borrowing.expected_return_date < actual_date:
+                    overdue_days = (actual_date - borrowing.expected_return_date).days
+                    if overdue_days > 0:
+                        is_fine = True
+                        fine_amount = Decimal(overdue_days * borrowing.book.daily_fee * FINE_MULTIPLIER)
+
                 payment_type = "FINE" if is_fine else "PAYMENT"
-                amount = Decimal(
-                    borrowing.book.daily_fee
-                    * (borrowing.expected_return_date - borrowing.borrow_date).days
+                amount = fine_amount if is_fine else Decimal(
+                    borrowing.book.daily_fee * (borrowing.expected_return_date - borrowing.borrow_date).days
                 )
+
                 session = stripe.checkout.Session.create(
                     payment_method_types=["card"],
                     line_items=[
@@ -114,6 +123,8 @@ class PaymentViewSet(
                 payment = Payment.objects.get(session_id=session_id)
                 payment.status = "PAID"
                 payment.save()
+                if payment.borrowing.expected_return_date < timezone.now().date():
+                    payment.borrowing.actual_return_date = timezone.now().date()
 
                 return Response(
                     {"message": "Payment successful", "session_id": session_id},

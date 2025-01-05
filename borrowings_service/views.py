@@ -1,15 +1,17 @@
-from rest_framework import viewsets, filters, status
-from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
-from rest_framework.response import Response
 from django.db import transaction
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied, ValidationError
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
-from django.utils import timezone
+from rest_framework import viewsets, filters, status
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from borrowings_service.models import Borrowing
 from borrowings_service.serializers import (
@@ -109,6 +111,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
         if not request.user.is_staff and borrowing.user != request.user:
             raise PermissionDenied("You don't have permission to return this book.")
+
+        if borrowing.expected_return_date < timezone.now().date():
+            return redirect(reverse("payments:payments-create-session", kwargs={"pk": borrowing.id}))
 
         with transaction.atomic():
             book = borrowing.book
