@@ -101,7 +101,7 @@ class PaymentViewSetTests(APITestCase):
 
     def test_create_stripe_session(self):
         self.client.force_authenticate(user=self.user)
-        borrowing_id = self.borrowing.id
+        borrowing_id = self.payment.borrowing.id
         response = self.client.post(
             f"http://localhost:8000/api/payments/payments/{borrowing_id}/create-session/"
         )
@@ -119,7 +119,7 @@ class PaymentViewSetTests(APITestCase):
 
     def test_successful_payment(self):
         self.client.force_authenticate(user=self.user)
-        borrowing_id = self.borrowing.id
+        borrowing_id = self.payment.borrowing.id
         response = self.client.post(
             f"http://localhost:8000/api/payments/payments/{borrowing_id}/create-session/"
         )
