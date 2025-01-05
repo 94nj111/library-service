@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -10,8 +12,10 @@ from payment.models import Payment
 
 PAYMENT_URL = reverse("payments:payments-list")
 
+
 class PaymentViewSetTests(APITestCase):
-    def setUp(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def setUp(self, mock_signal):
         self.admin = get_user_model().objects.create_superuser(
             "admin@test.com", "adminpass"
         )
@@ -92,7 +96,7 @@ class PaymentViewSetTests(APITestCase):
         response = self.client.get(
             reverse("payments:payments-detail", kwargs={"pk": self.other_payment.id})
         )
-        reverse("book_service:book-detail", kwargs={"pk": self.book.pk})
+        reverse("book_service:books-detail", kwargs={"pk": self.book.pk})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_anonymous_user_cannot_access_payments(self):

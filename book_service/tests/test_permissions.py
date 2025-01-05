@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-BOOK_URL = reverse("book_service:book-list")
+BOOK_URL = reverse("book_service:books-list")
 
 
 def sample_book(**params):
@@ -12,7 +12,7 @@ def sample_book(**params):
         "author": "Author",
         "cover": "HARD",
         "inventory": 100,
-        "daily_free": "50.00",
+        "daily_fee": "50.00",
     }
     data.update(params)
     return data
