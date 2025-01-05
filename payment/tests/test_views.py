@@ -103,7 +103,7 @@ class PaymentViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         borrowing_id = self.payment.borrowing.id
         response = self.client.post(
-            f"http://localhost:8000/api/payments/payments/{borrowing_id}/create-session/"
+            f"/api/payments/payments/{borrowing_id}/create-session/"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -121,7 +121,7 @@ class PaymentViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         borrowing_id = self.payment.borrowing.id
         response = self.client.post(
-            f"http://localhost:8000/api/payments/payments/{borrowing_id}/create-session/"
+            f"/api/payments/payments/{borrowing_id}/create-session/"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         session_id = response.data["session_id"]
