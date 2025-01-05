@@ -1,13 +1,9 @@
-import asyncio
-from datetime import datetime
 from unittest.mock import patch, MagicMock
 
 from django.contrib.auth import get_user_model
-from django.db import connection
 from django.test import TestCase
 from django.utils import timezone
 
-import library_bot
 from book_service.models import Book
 from borrowings_service.models import Borrowing
 from library_bot.bot import send_welcome, send_notification_on_borrowing_overdue

@@ -91,6 +91,19 @@ def send_notification_on_borrowing_overdue():
                 time.sleep(0.25)
 
 
+@shared_task
+def send_notification_on_success_payment(payment):
+    user_ids = get_users()
+    text = (f"Payment was successfully completed:\n"
+            f"Payment status:{payment.status}\n"
+            f"User email: {payment.borrowing.user.email}\n"
+            f"Money payed: {payment.money_to_pay}\n"
+            f"Session id: {payment.session_id}\n")
+    for user_id in user_ids:
+        bot.send_message(user_id, text)
+        time.sleep(0.25)
+
+
 async def poll():
     await bot.polling()
 
