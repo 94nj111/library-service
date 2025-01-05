@@ -37,7 +37,8 @@ class BorrowingViewsTests(APITestCase):
         response = self.client.get("/api/borrowings/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_create_borrowing(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_create_borrowing(self, mock_signal):
         self.client.force_authenticate(user=self.user)
         data = {
             "expected_return_date": timezone.now().date() + timezone.timedelta(days=7),
