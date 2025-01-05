@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
@@ -6,7 +9,7 @@ from django.contrib.auth import get_user_model
 from book_service.models import Book
 from borrowings_service.models import Borrowing
 from payment.models import Payment
-
+from payment.views import FINE_MULTIPLIER
 
 PAYMENT_URL = reverse("payments:payments-list")
 
@@ -36,17 +39,18 @@ class PaymentViewSetTests(APITestCase):
         )
 
         self.borrowing = Borrowing.objects.create(
-            borrow_date="2024-01-01",
-            expected_return_date="2024-01-02",
+            borrow_date=timezone.now().date() - timedelta(days=5),
+            expected_return_date=timezone.now().date() - timedelta(days=1),
             book=self.book,
             user=self.user,
         )
         self.other_borrowing = Borrowing.objects.create(
-            borrow_date="2024-01-01",
-            expected_return_date="2024-01-02",
+            borrow_date=timezone.now().date() - timedelta(days=5),
+            expected_return_date=timezone.now().date() - timedelta(days=1),
             book=self.other_book,
             user=self.other_user,
         )
+        self.url = reverse("borrowing-return-book", kwargs={"pk": self.borrowing.pk})
 
         self.payment = Payment.objects.create(
             status="PENDING",
@@ -80,7 +84,7 @@ class PaymentViewSetTests(APITestCase):
     def test_user_cannot_view_others_payment(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("payments:payments-detail", kwargs={"pk": self.other_payment.id})
+            reverse("payment:payment-detail", kwargs={"pk": self.other_payment.id})
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -90,7 +94,7 @@ class PaymentViewSetTests(APITestCase):
         """
         self.client.force_authenticate(user=self.admin)
         response = self.client.get(
-            reverse("payments:payments-detail", kwargs={"pk": self.other_payment.id})
+            reverse("payment:payment-detail", kwargs={"pk": self.other_payment.id})
         )
         reverse("book_service:book-detail", kwargs={"pk": self.book.pk})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -167,3 +171,28 @@ class PaymentViewSetTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Session ID is required", str(response.data))
+
+    def test_fine_created_for_overdue_return(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertIn("create_session", response.url)
+
+        fine_payment = Payment.objects.get(borrowing=self.borrowing)
+        self.assertEqual(fine_payment.type, "FINE")
+
+        overdue_days = (timezone.now().date() - self.borrowing.expected_return_date).days
+        expected_amount = self.book.daily_fee * overdue_days * FINE_MULTIPLIER
+        self.assertEqual(fine_payment.money_to_pay, expected_amount)
+
+    def test_no_fine_for_on_time_return(self):
+        self.client.force_authenticate(user=self.user)
+        self.borrowing.expected_return_date = timezone.now().date()
+        self.borrowing.save()
+
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Payment.objects.filter(borrowing=self.borrowing).exists())
