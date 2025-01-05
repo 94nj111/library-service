@@ -1,44 +1,115 @@
 import asyncio
 import os
+import sqlite3
+import time
+from datetime import datetime
 
-import aiosqlite
+import telebot
+from celery import shared_task
+
+from django.utils import timezone
 from dotenv import load_dotenv
-from telebot.async_telebot import AsyncTeleBot
 
 load_dotenv()
 
 TOKEN = os.environ.get("TOKEN")
 
-bot = AsyncTeleBot(TOKEN)
+bot = telebot.TeleBot(TOKEN)
 
 
-async def save_user(user_id):
-    async with aiosqlite.connect("../subscribers.db") as db:
-        await db.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY)")
-        await db.execute("INSERT OR IGNORE INTO users (id) VALUES (?)", (user_id,))
-        await db.commit()
+@shared_task
+def save_user(user_id):
+    with sqlite3.connect("../subscribers.db") as db:
+        db.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY)")
+        db.execute("INSERT OR IGNORE INTO users (id) VALUES (?)", (user_id,))
+        db.commit()
 
 
-async def get_users():
-    async with aiosqlite.connect("../subscribers.db") as db:
-        async with db.execute("SELECT id FROM users") as cursor:
-            return [row[0] async for row in cursor]
+@shared_task
+def get_users():
+    with sqlite3.connect("../subscribers.db") as db:
+        cursor = db.execute("SELECT id FROM users")
+        return [row[0] for row in cursor]
 
 
+@shared_task
 @bot.message_handler(commands=["start"])
-async def send_welcome(message):
+def send_welcome(message):
     text = (
         "Greetings, I'm a library bot and from now on I'll be sending you notifications about: \n"
         " - new borrowing created, \n - borrowings overdue \n - successful payments"
     )
 
     if message.chat.id:
-        await bot.send_message(message.chat.id, text=text)
-        await save_user(message.chat.id)
+        bot.send_message(message.chat.id, text=text)
+        save_user(message.chat.id)
     else:
-        await bot.send_message(message.from_user.id, text=text)
-        await save_user(message.from_user.id)
+        bot.send_message(message.from_user.id, text=text)
+        save_user(message.from_user.id)
 
+
+def get_text_about_overdue_borrowings():
+    from borrowings_service.models import Borrowing
+
+    max_length = 4096
+    messages = []
+
+    text = "Such borrows was overdue:\n"
+    for borrow in (
+            Borrowing.objects.select_related("book", "user")
+            .filter(expected_return_date__lte=timezone.now().date())
+    ):
+        if borrow:
+            borrow_message = (
+                f"Book: {borrow.book.title}\n"
+                f"User email: {borrow.user.email}\n"
+                f"Expected return date: {borrow.expected_return_date}\n"
+                f"---------------------------------------\n"
+            )
+
+            if len(text + borrow_message) > max_length:
+                messages.append(text)
+                text = ""
+            text += borrow_message
+
+    messages.append(text)
+    return messages
+
+
+def send_notification_on_borrowing_overdue():
+    user_ids = get_users()
+
+    messages = get_text_about_overdue_borrowings()
+
+    if len(messages) < 40:
+        for user_id in user_ids:
+            bot.send_message(user_id, "No borrowings overdue today!")
+            time.sleep(0.25)
+    else:
+        for user_id in user_ids:
+            for message in messages:
+                bot.send_message(user_id, message)
+                time.sleep(0.25)
+
+
+def send_notification_on_borrowing_created(sender, instance, created, **kwargs):
+    if created:
+
+        borrow_date = datetime.strftime(instance.borrow_date, "%Y-%m-%d %H:%M:%S")
+        text = (
+            f"New borrowing was created:\n"
+            f"Borrow date: {borrow_date}\n"
+            f"Expected return date: {instance.expected_return_date}\n"
+            f"Book: {instance.book.title}\n"
+            f"User email: {instance.user.email}"
+        )
+
+        for user_id in get_users():
+            bot.send_message(user_id, text)
+
+
+async def poll():
+    await bot.polling()
 
 if __name__ == "__main__":
-    asyncio.run(bot.polling())
+    asyncio.run(poll())
