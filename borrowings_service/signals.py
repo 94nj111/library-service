@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from celery import shared_task
@@ -12,10 +13,9 @@ def send_notification_on_borrowing_created(sender, instance, created, **kwargs):
     if created:
         from library_bot.bot import bot, get_users
 
-        borrow_date = datetime.strftime(instance.borrow_date, "%Y-%m-%d %H:%M:%S")
         text = (
             f"New borrowing was created:\n"
-            f"Borrow date: {borrow_date}\n"
+            f"Borrow date: {instance.borrow_date}\n"
             f"Expected return date: {instance.expected_return_date}\n"
             f"Book: {instance.book.title}\n"
             f"User email: {instance.user.email}"
