@@ -23,10 +23,12 @@ stripe.api_key = STRIPE_SECRET_KEY
     request=None,
     responses={201: PaymentSerializer},
 )
-class PaymentViewSet(mixins.ListModelMixin,
-                     mixins.CreateModelMixin,
-                     mixins.RetrieveModelMixin,
-                     viewsets.GenericViewSet):
+class PaymentViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated,)
@@ -50,9 +52,14 @@ class PaymentViewSet(mixins.ListModelMixin,
             with transaction.atomic():
                 is_fine = False
                 if borrowing.actual_return_date:
-                    is_fine = borrowing.actual_return_date > borrowing.expected_return_date
+                    is_fine = (
+                        borrowing.actual_return_date > borrowing.expected_return_date
+                    )
                 payment_type = "FINE" if is_fine else "PAYMENT"
-                amount = Decimal(borrowing.book.daily_fee * (borrowing.expected_return_date - borrowing.borrow_date).days)
+                amount = Decimal(
+                    borrowing.book.daily_fee
+                    * (borrowing.expected_return_date - borrowing.borrow_date).days
+                )
                 session = stripe.checkout.Session.create(
                     payment_method_types=["card"],
                     line_items=[
@@ -62,7 +69,7 @@ class PaymentViewSet(mixins.ListModelMixin,
                                 "product_data": {
                                     "name": f"Borrowing: {borrowing.book.title}"
                                 },
-                                "unit_amount": int(amount * 100)
+                                "unit_amount": int(amount * 100),
                             },
                             "quantity": 1,
                         }
@@ -79,10 +86,12 @@ class PaymentViewSet(mixins.ListModelMixin,
                     session_url=session.url,
                     type=payment_type,
                     money_to_pay=amount,
+                    status="PENDING",
                 )
 
                 return Response(
-                    {"session_url": session.url, "session_id": session.id}, status=201
+                    {"session_url": session.url, "session_id": session.id},
+                    status=status.HTTP_201_CREATED,
                 )
 
         except stripe.error.StripeError as e:
