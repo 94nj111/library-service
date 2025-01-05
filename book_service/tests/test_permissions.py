@@ -12,7 +12,7 @@ def sample_book(**params):
         "author": "Author",
         "cover": "HARD",
         "inventory": 100,
-        "daily_free": "50.00"
+        "daily_free": "50.00",
     }
     data.update(params)
     return data
@@ -23,9 +23,7 @@ class BookViewSetTests(APITestCase):
         self.admin = get_user_model().objects.create_superuser(
             "admin@test.com", "adminpass"
         )
-        self.user = get_user_model().objects.create_user(
-            "user@test.com", "userpass"
-        )
+        self.user = get_user_model().objects.create_user("user@test.com", "userpass")
 
     def test_list_books_unauthenticated(self):
         response = self.client.get(BOOK_URL)

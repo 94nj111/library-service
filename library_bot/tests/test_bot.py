@@ -46,7 +46,9 @@ class TestBot(TestCase):
 
     @patch("library_bot.bot.bot.send_message")
     @patch("library_bot.bot.get_users")
-    def test_get_notification_on_borrowing_creation(self, mock_get_users, mock_send_message):
+    def test_get_notification_on_borrowing_creation(
+        self, mock_get_users, mock_send_message
+    ):
         mock_get_users.return_value = [1]
 
         self.borrowing = Borrowing.objects.create(
@@ -62,15 +64,14 @@ class TestBot(TestCase):
         mock_get_users.return_value = [1]
         send_notification_on_borrowing_overdue()
 
-        mock_send_message.assert_called_with(
-            1,
-            "No borrowings overdue today!"
-        )
+        mock_send_message.assert_called_with(1, "No borrowings overdue today!")
 
     @patch("borrowings_service.signals.send_notification_on_borrowing_created")
     @patch("library_bot.bot.bot.send_message")
     @patch("library_bot.bot.get_users")
-    def test_borrowing_overdue_check(self, mock_get_users, mock_send_message, mock_notification):
+    def test_borrowing_overdue_check(
+        self, mock_get_users, mock_send_message, mock_notification
+    ):
         mock_get_users.return_value = [1]
 
         borrowing = Borrowing.objects.create(
@@ -88,5 +89,5 @@ class TestBot(TestCase):
             f"Book: {borrowing.book.title}\n"
             f"User email: {borrowing.user.email}\n"
             f"Expected return date: {borrowing.expected_return_date}\n"
-            f"---------------------------------------\n"
+            f"---------------------------------------\n",
         )

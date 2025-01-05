@@ -7,4 +7,4 @@ class BorrowingsServiceConfig(AppConfig):
 
     def ready(self):
         import borrowings_service.signals  # noqa
-        import library_bot.celery_app # noqa
+        import library_bot.celery_app  # noqa
