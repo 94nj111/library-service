@@ -2,10 +2,8 @@ import asyncio
 import os
 import sqlite3
 import time
-from datetime import datetime
 
 import telebot
-from celery import shared_task
 
 from django.utils import timezone
 from dotenv import load_dotenv
