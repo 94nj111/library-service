@@ -3,7 +3,6 @@ import os
 import time
 
 import telebot
-
 from django.utils import timezone
 from dotenv import load_dotenv
 

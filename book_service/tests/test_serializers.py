@@ -1,7 +1,9 @@
+from decimal import Decimal
+
 from django.test import TestCase
+
 from book_service.models import Book
 from book_service.serializers import BookSerializer
-from decimal import Decimal
 
 
 class BookSerializerTest(TestCase):

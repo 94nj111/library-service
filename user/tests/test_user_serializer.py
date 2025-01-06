@@ -1,4 +1,5 @@
 from rest_framework.test import APITestCase
+
 from user.serializers import UserSerializer
 
 

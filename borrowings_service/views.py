@@ -5,8 +5,8 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
-from rest_framework import viewsets, filters, status
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
@@ -15,8 +15,8 @@ from rest_framework.response import Response
 
 from borrowings_service.models import Borrowing
 from borrowings_service.serializers import (
-    BorrowingSerializer,
     BorrowingCreateSerializer,
+    BorrowingSerializer,
 )
 from borrowings_service.services import validate_user_payments
 

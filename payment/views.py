@@ -4,7 +4,7 @@ import stripe
 from django.db import transaction
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
-from rest_framework import status, mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +12,7 @@ from rest_framework.response import Response
 
 from core.settings import STRIPE_SECRET_KEY
 from library_bot.bot import send_notification_on_success_payment
-from payment.models import Payment, Borrowing
+from payment.models import Borrowing, Payment
 from payment.serializers import PaymentSerializer
 
 stripe.api_key = STRIPE_SECRET_KEY
