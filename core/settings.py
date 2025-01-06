@@ -177,6 +177,7 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+# fixed
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
