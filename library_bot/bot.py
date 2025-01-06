@@ -105,8 +105,12 @@ def send_notification_on_success_payment(payment):
 
 
 async def poll():
-    await bot.polling()
-
+    while True:
+        try:
+            await bot.polling(non_stop=True)
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            await asyncio.sleep(5) 
 
 if __name__ == "__main__":
     asyncio.run(poll())

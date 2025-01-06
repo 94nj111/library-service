@@ -62,6 +62,19 @@ services:
     command: >
       sh -c "celery -A core beat --loglevel=info"
 
+  bot:
+    build:
+      context: .
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "python library_bot/bot.py"
+
 volumes:
   my_db:
   my_media:
