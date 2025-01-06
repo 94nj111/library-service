@@ -145,7 +145,6 @@ class PaymentViewSetTests(APITestCase):
             self.assertEqual(payment.status, "PAID")
 
     def test_successful_payment_without_session_id(self):
-
         self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/payments/payments/success/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -165,7 +164,6 @@ class PaymentViewSetTests(APITestCase):
         )
 
     def test_cancel_payment_without_session_id(self):
-
         self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/payments/payments/cancel/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

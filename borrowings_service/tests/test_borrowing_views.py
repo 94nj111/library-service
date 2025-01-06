@@ -15,7 +15,6 @@ User = get_user_model()
 
 
 class BorrowingViewsTests(APITestCase):
-
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(

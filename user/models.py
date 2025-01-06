@@ -6,7 +6,6 @@ from base.models import UUIDModel
 
 
 class UserManager(UserManager):
-
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):

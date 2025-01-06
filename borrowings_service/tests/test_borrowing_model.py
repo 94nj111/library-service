@@ -10,7 +10,6 @@ User = get_user_model()
 
 
 class BorrowingModelTests(TestCase):
-
     def setUp(self):
         self.user = User.objects.create_user(
             email="test@example.com", password="password123"
