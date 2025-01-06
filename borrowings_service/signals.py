@@ -9,7 +9,7 @@ from borrowings_service.models import Borrowing
 @receiver(post_save, sender=Borrowing)
 def send_notification_on_borrowing_created(sender, instance, created, **kwargs):
     if created:
-        from library_bot.bot import bot, get_users
+        from library_bot.bot import bot, CHAT_ID
 
         text = (
             f"New borrowing was created:\n"
@@ -19,5 +19,4 @@ def send_notification_on_borrowing_created(sender, instance, created, **kwargs):
             f"User email: {instance.user.email}"
         )
 
-        for user_id in get_users():
-            bot.send_message(user_id, text)
+        bot.send_message(CHAT_ID, text)
