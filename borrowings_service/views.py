@@ -113,7 +113,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You don't have permission to return this book.")
 
         if borrowing.expected_return_date < timezone.now().date():
-            return redirect(reverse("payments:payments-create-session", kwargs={"pk": borrowing.id}))
+            return redirect(
+                reverse("payments:payments-create-session", kwargs={"pk": borrowing.id})
+            )
 
         with transaction.atomic():
             book = borrowing.book

@@ -29,7 +29,7 @@ class PaymentViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet
+    viewsets.GenericViewSet,
 ):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
@@ -60,11 +60,18 @@ class PaymentViewSet(
                     overdue_days = (actual_date - borrowing.expected_return_date).days
                     if overdue_days > 0:
                         is_fine = True
-                        fine_amount = Decimal(overdue_days * borrowing.book.daily_fee * FINE_MULTIPLIER)
+                        fine_amount = Decimal(
+                            overdue_days * borrowing.book.daily_fee * FINE_MULTIPLIER
+                        )
 
                 payment_type = "FINE" if is_fine else "PAYMENT"
-                amount = fine_amount if is_fine else Decimal(
-                    borrowing.book.daily_fee * (borrowing.expected_return_date - borrowing.borrow_date).days
+                amount = (
+                    fine_amount
+                    if is_fine
+                    else Decimal(
+                        borrowing.book.daily_fee
+                        * (borrowing.expected_return_date - borrowing.borrow_date).days
+                    )
                 )
 
                 session = stripe.checkout.Session.create(
@@ -97,7 +104,8 @@ class PaymentViewSet(
                 )
 
                 return Response(
-                    {"session_url": session.url, "session_id": session.id}, status=status.HTTP_201_CREATED
+                    {"session_url": session.url, "session_id": session.id},
+                    status=status.HTTP_201_CREATED,
                 )
 
         except stripe.error.StripeError as e:
@@ -169,7 +177,7 @@ class PaymentViewSet(
         if payment.status != "EXPIRED":
             return Response(
                 {"error": "Only expired payments can be renewed"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -189,7 +197,7 @@ class PaymentViewSet(
                 ],
                 mode="payment",
                 success_url=request.build_absolute_uri("/payment/success/")
-                            + "?session_id={CHECKOUT_SESSION_ID}",
+                + "?session_id={CHECKOUT_SESSION_ID}",
                 cancel_url=request.build_absolute_uri("/payment/cancel/"),
             )
 
@@ -199,9 +207,8 @@ class PaymentViewSet(
             payment.save()
 
             return Response(
-                {"session_url": new_session.url,
-                 "session_id": new_session.id},
-                status=status.HTTP_200_OK
+                {"session_url": new_session.url, "session_id": new_session.id},
+                status=status.HTTP_200_OK,
             )
 
         except stripe.error.StripeError as e:

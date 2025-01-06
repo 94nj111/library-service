@@ -27,12 +27,8 @@ class Payment(models.Model):
     )
     session_url = models.URLField()
     session_id = models.CharField(max_length=255)
-    money_to_pay = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0
-    )
-    
+    money_to_pay = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     def save(self, *args, **kwargs):
         if not self.expires_at:
             self.expires_at = timezone.now() + timezone.timedelta(hours=24)

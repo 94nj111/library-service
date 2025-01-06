@@ -62,7 +62,6 @@ services:
     command: >
       sh -c "celery -A core beat --loglevel=info"
 
-# run bot
   bot:
     build:
       context: .
