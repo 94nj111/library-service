@@ -1,10 +1,11 @@
-from stripe.checkout import Session
-
+import stripe
 from celery import shared_task
 from django.utils import timezone
-from .models import Payment
-import stripe
+from stripe.checkout import Session
+
 from core.settings import STRIPE_SECRET_KEY
+
+from .models import Payment
 
 stripe.api_key = STRIPE_SECRET_KEY
 

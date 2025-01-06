@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from book_service.models import Book
 from borrowings_service.models import Borrowing
-from library_bot.bot import send_welcome, send_notification_on_borrowing_overdue
+from library_bot.bot import send_notification_on_borrowing_overdue, send_welcome
 
 
 class TestBot(TestCase):

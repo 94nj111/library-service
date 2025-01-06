@@ -1,6 +1,5 @@
 from django.db import models
 
-
 COVER_CHOICES = (
     ("HARD", "Hard"),
     ("SOFT", "Soft"),
