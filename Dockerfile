@@ -30,7 +30,7 @@ RUN chmod -R 755 /files/media
 COPY pyproject.toml poetry.lock* ./
 
 RUN pip install --no-cache-dir poetry && \
-    poetry install --no-dev --no-interaction --no-ansi
+    poetry install --no-interaction --no-ansi
 
 USER appuser
 

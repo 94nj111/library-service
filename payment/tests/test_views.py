@@ -53,7 +53,9 @@ class PaymentViewSetTests(APITestCase):
             book=self.other_book,
             user=self.other_user,
         )
-        self.url = reverse("borrowings:borrowing-return-book", kwargs={"pk": self.borrowing.pk})
+        self.url = reverse(
+            "borrowings:borrowing-return-book", kwargs={"pk": self.borrowing.pk}
+        )
 
         self.payment = Payment.objects.create(
             status="PENDING",
@@ -119,9 +121,7 @@ class PaymentViewSetTests(APITestCase):
 
     def test_create_stripe_session_for_non_existing_borrowing(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            "/api/payments/payments/999/create-session/"
-        )
+        response = self.client.post("/api/payments/payments/999/create-session/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_successful_payment(self):
@@ -147,9 +147,7 @@ class PaymentViewSetTests(APITestCase):
     def test_successful_payment_without_session_id(self):
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(
-            "/api/payments/payments/success/"
-        )
+        response = self.client.get("/api/payments/payments/success/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data.get("error"), "Session ID is required")
 
@@ -169,9 +167,7 @@ class PaymentViewSetTests(APITestCase):
     def test_cancel_payment_without_session_id(self):
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(
-            "/api/payments/payments/cancel/"
-        )
+        response = self.client.get("/api/payments/payments/cancel/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Session ID is required", str(response.data))
 
@@ -181,13 +177,20 @@ class PaymentViewSetTests(APITestCase):
         response = self.client.post(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertIn(reverse("payments:payments-create-session", kwargs={"pk": self.borrowing.pk}), response.url)
+        self.assertIn(
+            reverse(
+                "payments:payments-create-session", kwargs={"pk": self.borrowing.pk}
+            ),
+            response.url,
+        )
         response = self.client.post(response.url)
 
         fine_payment = Payment.objects.filter(borrowing=self.borrowing).last()
         self.assertEqual(fine_payment.type, "FINE")
 
-        overdue_days = (timezone.now().date() - self.borrowing.expected_return_date).days
+        overdue_days = (
+            timezone.now().date() - self.borrowing.expected_return_date
+        ).days
         expected_amount = Decimal(self.book.daily_fee * overdue_days * FINE_MULTIPLIER)
         self.assertEqual(fine_payment.money_to_pay, expected_amount)
 

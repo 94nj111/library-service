@@ -29,7 +29,7 @@ class PaymentViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet
+    viewsets.GenericViewSet,
 ):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
@@ -60,11 +60,18 @@ class PaymentViewSet(
                     overdue_days = (actual_date - borrowing.expected_return_date).days
                     if overdue_days > 0:
                         is_fine = True
-                        fine_amount = Decimal(overdue_days * borrowing.book.daily_fee * FINE_MULTIPLIER)
+                        fine_amount = Decimal(
+                            overdue_days * borrowing.book.daily_fee * FINE_MULTIPLIER
+                        )
 
                 payment_type = "FINE" if is_fine else "PAYMENT"
-                amount = fine_amount if is_fine else Decimal(
-                    borrowing.book.daily_fee * (borrowing.expected_return_date - borrowing.borrow_date).days
+                amount = (
+                    fine_amount
+                    if is_fine
+                    else Decimal(
+                        borrowing.book.daily_fee
+                        * (borrowing.expected_return_date - borrowing.borrow_date).days
+                    )
                 )
 
                 session = stripe.checkout.Session.create(
@@ -97,7 +104,8 @@ class PaymentViewSet(
                 )
 
                 return Response(
-                    {"session_url": session.url, "session_id": session.id}, status=status.HTTP_201_CREATED
+                    {"session_url": session.url, "session_id": session.id},
+                    status=status.HTTP_201_CREATED,
                 )
 
         except stripe.error.StripeError as e:
@@ -162,3 +170,46 @@ class PaymentViewSet(
             },
             status=status.HTTP_202_ACCEPTED,
         )
+
+    @action(detail=True, methods=["POST"])
+    def renew_session(self, request, pk=None):
+        payment = self.get_object()
+        if payment.status != "EXPIRED":
+            return Response(
+                {"error": "Only expired payments can be renewed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            new_session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=[
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "product_data": {
+                                "name": f"Borrowing: {payment.borrowing.book_title}"
+                            },
+                            "unit_amount": int(payment.money_to_pay * 100),
+                        },
+                        "quantity": 1,
+                    }
+                ],
+                mode="payment",
+                success_url=request.build_absolute_uri("/payment/success/")
+                + "?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=request.build_absolute_uri("/payment/cancel/"),
+            )
+
+            payment.session_id = new_session.id
+            payment.session_url = new_session.url
+            payment.status = "PENDING"
+            payment.save()
+
+            return Response(
+                {"session_url": new_session.url, "session_id": new_session.id},
+                status=status.HTTP_200_OK,
+            )
+
+        except stripe.error.StripeError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
