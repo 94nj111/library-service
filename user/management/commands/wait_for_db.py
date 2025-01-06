@@ -6,7 +6,6 @@ from django.db.utils import OperationalError
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **kwargs):
         db_connection = None
         while not db_connection:

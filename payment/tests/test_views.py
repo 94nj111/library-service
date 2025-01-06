@@ -1,11 +1,11 @@
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework.test import APITestCase
 from rest_framework import status
-from django.contrib.auth import get_user_model
+from rest_framework.test import APITestCase
 
 from book_service.models import Book
 from borrowings_service.models import Borrowing
@@ -145,7 +145,6 @@ class PaymentViewSetTests(APITestCase):
             self.assertEqual(payment.status, "PAID")
 
     def test_successful_payment_without_session_id(self):
-
         self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/payments/payments/success/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -165,7 +164,6 @@ class PaymentViewSetTests(APITestCase):
         )
 
     def test_cancel_payment_without_session_id(self):
-
         self.client.force_authenticate(user=self.user)
         response = self.client.get("/api/payments/payments/cancel/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

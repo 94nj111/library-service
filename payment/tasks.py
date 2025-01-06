@@ -1,10 +1,11 @@
-from stripe.checkout import Session
-
+import stripe
 from celery import shared_task
 from django.utils import timezone
-from .models import Payment
-import stripe
+from stripe.checkout import Session
+
 from core.settings import STRIPE_SECRET_KEY
+
+from .models import Payment
 
 stripe.api_key = STRIPE_SECRET_KEY
 
@@ -15,7 +16,7 @@ def check_expired_sessions():
 
     for payment in pending_payments:
         try:
-            session: Session = stripe.checkout.Session.retrieve(payment.session_id) # noqa
+            session: Session = stripe.checkout.Session.retrieve(payment.session_id)  # noqa
             if timezone.now() > payment.created_at + timezone.timedelta(hours=24):
                 payment.status = "EXPIRED"
                 payment.save()

@@ -1,15 +1,16 @@
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
-from borrowings_service.models import Borrowing
-from book_service.models import Book
-from django.contrib.auth import get_user_model
-from borrowings_service.serializers import (
-    BorrowingSerializer,
-    BorrowingCreateSerializer,
-)
 from rest_framework.exceptions import ValidationError
+
+from book_service.models import Book
+from borrowings_service.models import Borrowing
+from borrowings_service.serializers import (
+    BorrowingCreateSerializer,
+    BorrowingSerializer,
+)
 
 User = get_user_model()
 
