@@ -17,7 +17,6 @@ TOKEN = os.environ.get("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 
-@shared_task
 def save_user(user_id):
     with sqlite3.connect("../subscribers.db") as db:
         db.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY)")
@@ -25,14 +24,12 @@ def save_user(user_id):
         db.commit()
 
 
-@shared_task
 def get_users():
     with sqlite3.connect("../subscribers.db") as db:
         cursor = db.execute("SELECT id FROM users")
         return [row[0] for row in cursor]
 
 
-@shared_task
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
     text = (
@@ -91,7 +88,6 @@ def send_notification_on_borrowing_overdue():
                 time.sleep(0.25)
 
 
-@shared_task
 def send_notification_on_success_payment(payment):
     user_ids = get_users()
     text = (
