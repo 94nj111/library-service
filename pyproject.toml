@@ -2,7 +2,7 @@
 name = "library-service"
 version = "0.1.0"
 description = ""
-authors = ["Dmytro <94nj111@gmail.com>"]
+authors = ["Iron Branchgit"]
 readme = "README.md"
 package-mode = false
 
@@ -18,7 +18,11 @@ psycopg2-binary = "^2.9.10"
 redis = "^5.2.1"
 stripe = "^11.4.1"
 python-dotenv = "^1.0.1"
-
+drf-spectacular = "^0.28.0"
+celery = "^5.4.0"
+django-celery-beat = "^2.7.0"
+pytelegrambotapi = "^4.25.0"
+aiohttp = "^3.11.11"
 
 [build-system]
 requires = ["poetry-core"]

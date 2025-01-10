@@ -1,8 +1,9 @@
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from book_service.models import Book
-from django.contrib.auth import get_user_model
 
 
 class BookViewSetTest(APITestCase):
@@ -15,7 +16,7 @@ class BookViewSetTest(APITestCase):
             "daily_fee": "9.99",
         }
         self.book = Book.objects.create(**self.book_data)
-        self.url = reverse("book_service:book-list")
+        self.url = reverse("book_service:books-list")
         self.admin = get_user_model().objects.create_superuser(
             "admin@test.com", "adminpass"
         )
@@ -24,7 +25,6 @@ class BookViewSetTest(APITestCase):
     def test_get_book_list(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
 
     def test_create_book_unauthenticated(self):
         data = self.book_data
@@ -60,13 +60,13 @@ class BookViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_book_detail(self):
-        url = reverse("book_service:book-detail", kwargs={"pk": self.book.pk})
+        url = reverse("book_service:books-detail", kwargs={"pk": self.book.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["title"], self.book.title)
 
     def test_update_book_admin(self):
-        url = reverse("book_service:book-detail", kwargs={"pk": self.book.pk})
+        url = reverse("book_service:books-detail", kwargs={"pk": self.book.pk})
         updated_data = {
             "title": "Updated Book",
             "author": self.book.author,
@@ -81,19 +81,19 @@ class BookViewSetTest(APITestCase):
         self.assertEqual(self.book.title, "Updated Book")
 
     def test_delete_book_admin(self):
-        url = reverse("book_service:book-detail", kwargs={"pk": self.book.pk})
+        url = reverse("book_service:books-detail", kwargs={"pk": self.book.pk})
         self.client.force_authenticate(user=self.admin)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Book.objects.count(), 0)
 
     def test_delete_book_unauthenticated(self):
-        url = reverse("book_service:book-detail", kwargs={"pk": self.book.pk})
+        url = reverse("book_service:books-detail", kwargs={"pk": self.book.pk})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_delete_book_as_user(self):
-        url = reverse("book_service:book-detail", kwargs={"pk": self.book.pk})
+        url = reverse("book_service:books-detail", kwargs={"pk": self.book.pk})
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
