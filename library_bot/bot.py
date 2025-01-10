@@ -3,6 +3,7 @@ import os
 import time
 
 import telebot
+
 from django.utils import timezone
 from dotenv import load_dotenv
 
@@ -16,7 +17,7 @@ CHAT_ID = -1002341988404
 
 
 @bot.message_handler(commands=["get_id"])
-def send_welcome(message):
+def get_id(message):
     bot.send_message(message.chat.id, message.chat.id)
 
 

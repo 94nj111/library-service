@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from book_service.models import Book
 from borrowings_service.models import Borrowing
-from library_bot.bot import send_notification_on_borrowing_overdue, send_welcome
+from library_bot.bot import send_notification_on_borrowing_overdue, CHAT_ID, get_id
 
 
 class TestBot(TestCase):
@@ -24,26 +24,20 @@ class TestBot(TestCase):
         )
 
     @patch("library_bot.bot.bot.send_message")
-    @patch("library_bot.bot.save_user")
-    def test_sign_for_a_bot(self, mock_save_user, mock_send_message):
+    def test_get_id(self, mock_send_message):
         mock_message = MagicMock()
-        mock_message.chat.id = 1
+        mock_message.chat.id = 1542351
 
-        send_welcome(mock_message)
+        get_id(mock_message)
 
         mock_send_message.assert_called_with(
-            mock_message.chat.id,
-            text="Greetings, I'm a library bot and"
-            " from now on I'll be sending you notifications about: \n"
-            " - new borrowing created, \n - borrowings overdue \n - successful payments",
+            1542351,
+            1542351
         )
 
-        mock_save_user.assert_called_with(mock_message.chat.id)
-
     @patch("library_bot.bot.bot.send_message")
-    @patch("library_bot.bot.get_users")
     def test_get_notification_on_borrowing_creation(
-        self, mock_get_users, mock_send_message
+        self, mock_get_users
     ):
         mock_get_users.return_value = [1]
 
@@ -55,20 +49,16 @@ class TestBot(TestCase):
         )
 
     @patch("library_bot.bot.bot.send_message")
-    @patch("library_bot.bot.get_users")
-    def test_borrowing_overdue_check(self, mock_get_users, mock_send_message):
-        mock_get_users.return_value = [1]
+    def test_borrowing_overdue_check(self, mock_send_message):
         send_notification_on_borrowing_overdue()
 
-        mock_send_message.assert_called_with(1, "No borrowings overdue today!")
+        mock_send_message.assert_called_with(CHAT_ID, "No borrowings overdue today!")
 
     @patch("borrowings_service.signals.send_notification_on_borrowing_created")
     @patch("library_bot.bot.bot.send_message")
-    @patch("library_bot.bot.get_users")
     def test_borrowing_overdue_check(
-        self, mock_get_users, mock_send_message, mock_notification
+        self, mock_send_message, mock_notification
     ):
-        mock_get_users.return_value = [1]
 
         borrowing = Borrowing.objects.create(
             borrow_date=timezone.now().date() - timezone.timedelta(days=1),
@@ -80,7 +70,7 @@ class TestBot(TestCase):
         send_notification_on_borrowing_overdue()
 
         mock_send_message.assert_called_with(
-            1,
+            CHAT_ID,
             f"Such borrows was overdue:\n"
             f"Book: {borrowing.book.title}\n"
             f"User email: {borrowing.user.email}\n"
