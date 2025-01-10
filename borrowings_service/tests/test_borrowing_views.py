@@ -32,7 +32,7 @@ class BorrowingViewsTests(APITestCase):
 
     def test_list_borrowings(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get("/api/borrowings/borrowings/")
+        response = self.client.get("/api/borrowings/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @patch("django.db.models.signals.ModelSignal.send")
@@ -42,7 +42,7 @@ class BorrowingViewsTests(APITestCase):
             "expected_return_date": timezone.now().date() + timezone.timedelta(days=7),
             "book": self.book.id,
         }
-        response = self.client.post("/api/borrowings/borrowings/", data)
+        response = self.client.post("/api/borrowings/", data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @patch("django.db.models.signals.ModelSignal.send")
@@ -66,17 +66,17 @@ class BorrowingViewsTests(APITestCase):
             "expected_return_date": timezone.now().date() + timezone.timedelta(days=7),
             "book": self.book.id,
         }
-        response = self.client.post("/api/borrowings/borrowings/", data)
+        response = self.client.post("/api/borrowings/", data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_permission_for_admin(self):
         self.client.force_authenticate(user=self.admin)
-        response = self.client.get(f"/api/borrowings/borrowings/?user_id={self.user.id}")
+        response = self.client.get(f"/api/borrowings/?user_id={self.user.id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_permission_denied_for_non_admin(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get("/api/borrowings/borrowings/?user_id=1")
+        response = self.client.get("/api/borrowings/?user_id=1")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @patch("django.db.models.signals.ModelSignal.send")
@@ -88,7 +88,7 @@ class BorrowingViewsTests(APITestCase):
             book=self.book,
             user=self.user,
         )
-        response = self.client.get("/api/borrowings/borrowings/?is_active=true")
+        response = self.client.get("/api/borrowings/?is_active=true")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
@@ -102,7 +102,7 @@ class BorrowingViewsTests(APITestCase):
             book=self.book,
             user=self.user,
         )
-        response = self.client.get("/api/borrowings/borrowings/?is_active=false")
+        response = self.client.get("/api/borrowings/?is_active=false")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
@@ -116,7 +116,7 @@ class BorrowingViewsTests(APITestCase):
             user=self.user,
         )
         initial_inventory = self.book.inventory
-        response = self.client.post(f"/api/borrowings/borrowings/{borrowing.id}/return/")
+        response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.book.refresh_from_db()
         self.assertEqual(self.book.inventory, initial_inventory + 1)
@@ -133,7 +133,7 @@ class BorrowingViewsTests(APITestCase):
             book=self.book,
             user=self.user,
         )
-        response = self.client.post(f"/api/borrowings/borrowings/{borrowing.id}/return/")
+        response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch("django.db.models.signals.ModelSignal.send")
@@ -148,7 +148,7 @@ class BorrowingViewsTests(APITestCase):
             book=self.book,
             user=other_user,
         )
-        response = self.client.post(f"/api/borrowings/borrowings/{borrowing.id}/return/")
+        response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @patch("django.db.models.signals.ModelSignal.send")
@@ -161,7 +161,7 @@ class BorrowingViewsTests(APITestCase):
             user=self.user,
         )
         initial_inventory = self.book.inventory
-        response = self.client.post(f"/api/borrowings/borrowings/{borrowing.id}/return/")
+        response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.book.refresh_from_db()
         self.assertEqual(self.book.inventory, initial_inventory + 1)
