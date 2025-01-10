@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("book_service", "0002_rename_daily_free_book_daily_fee"),
         ("borrowings_service", "0001_initial"),

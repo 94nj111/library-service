@@ -1,6 +1,6 @@
-from rest_framework import viewsets
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from rest_framework import viewsets
 
 from book_service.models import Book
 from book_service.permissions import IsAdminOrReadOnly

@@ -1,12 +1,11 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
+from django.db import models
 from django.utils.translation import gettext as _
 
 from base.models import UUIDModel
 
 
 class UserManager(UserManager):
-
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
