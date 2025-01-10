@@ -54,9 +54,8 @@ class PaymentViewSetTests(APITestCase):
             user=self.other_user,
         )
         self.url = reverse(
-            "borrowings:borrowing-return-book", kwargs={"pk": self.borrowing.pk}
+            "borrowings:return-book", kwargs={"pk": self.borrowing.pk}
         )
-
         self.payment = Payment.objects.create(
             status="PENDING",
             type="PAYMENT",
@@ -112,7 +111,7 @@ class PaymentViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         borrowing_id = self.borrowing.id
         response = self.client.post(
-            reverse("payments:payments-create-session", kwargs={"pk": borrowing_id})
+            reverse("payments:create-session", kwargs={"pk": borrowing_id})
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -121,19 +120,19 @@ class PaymentViewSetTests(APITestCase):
 
     def test_create_stripe_session_for_non_existing_borrowing(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.post("/api/payments/payments/999/create-session/")
+        response = self.client.post("/api/payments/999/create-session/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_successful_payment(self):
         self.client.force_authenticate(user=self.user)
         borrowing_id = self.borrowing.id
         response = self.client.post(
-            reverse("payments:payments-create-session", kwargs={"pk": borrowing_id})
+            reverse("payments:create-session", kwargs={"pk": borrowing_id})
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         session_id = response.data["session_id"]
         response = self.client.get(
-            f"/api/payments/payments/success/?session_id={session_id}"
+            f"/api/payments/success/?session_id={session_id}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -146,14 +145,14 @@ class PaymentViewSetTests(APITestCase):
 
     def test_successful_payment_without_session_id(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get("/api/payments/payments/success/")
+        response = self.client.get("/api/payments/success/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data.get("error"), "Session ID is required")
 
     def test_cancel_payment(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            "/api/payments/payments/cancel/",
+            "/api/payments/cancel/",
             {"session_id": self.payment.session_id},
         )
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -165,7 +164,7 @@ class PaymentViewSetTests(APITestCase):
 
     def test_cancel_payment_without_session_id(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get("/api/payments/payments/cancel/")
+        response = self.client.get("/api/payments/cancel/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Session ID is required", str(response.data))
 
@@ -177,7 +176,7 @@ class PaymentViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertIn(
             reverse(
-                "payments:payments-create-session", kwargs={"pk": self.borrowing.pk}
+                "payments:create-session", kwargs={"pk": self.borrowing.pk}
             ),
             response.url,
         )
