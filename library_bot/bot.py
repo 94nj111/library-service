@@ -29,7 +29,7 @@ def get_text_about_overdue_borrowings():
 
     text = "Such borrows was overdue:\n"
     for borrow in Borrowing.objects.select_related("book", "user").filter(
-        expected_return_datelte=timezone.now().date() - timezone.timedelta(days=1)
+        expected_return_date=timezone.now().date() - timezone.timedelta(days=1)
     ):
         if borrow:
             borrow_message = (

@@ -54,7 +54,7 @@ class PaymentViewSetTests(APITestCase):
             user=self.other_user,
         )
         self.url = reverse(
-            "borrowings:return-book", kwargs={"pk": self.borrowing.pk}
+            "borrowings:borrowings-return-book", kwargs={"pk": self.borrowing.pk}
         )
         self.payment = Payment.objects.create(
             status="PENDING",
@@ -111,7 +111,7 @@ class PaymentViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         borrowing_id = self.borrowing.id
         response = self.client.post(
-            reverse("payments:create-session", kwargs={"pk": borrowing_id})
+            reverse("payments:payments-create-session", kwargs={"pk": borrowing_id})
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -127,7 +127,7 @@ class PaymentViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         borrowing_id = self.borrowing.id
         response = self.client.post(
-            reverse("payments:create-session", kwargs={"pk": borrowing_id})
+            reverse("payments:payments-create-session", kwargs={"pk": borrowing_id})
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         session_id = response.data["session_id"]
@@ -176,7 +176,7 @@ class PaymentViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertIn(
             reverse(
-                "payments:create-session", kwargs={"pk": self.borrowing.pk}
+                "payments:payments-create-session", kwargs={"pk": self.borrowing.pk}
             ),
             response.url,
         )
