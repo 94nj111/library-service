@@ -49,7 +49,6 @@ def get_text_about_overdue_borrowings():
 
 
 def send_notification_on_borrowing_overdue():
-
     messages = get_text_about_overdue_borrowings()
 
     if len(messages[0]) < 40:
