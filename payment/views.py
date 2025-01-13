@@ -74,16 +74,6 @@ class PaymentViewSet(
                         * (borrowing.expected_return_date - borrowing.borrow_date).days
                     )
                 )
-
-                if borrowing.actual_return_date:
-                    is_fine = (
-                        borrowing.actual_return_date > borrowing.expected_return_date
-                    )
-                payment_type = "FINE" if is_fine else "PAYMENT"
-                amount = Decimal(
-                    borrowing.book.daily_fee
-                    * (borrowing.expected_return_date - borrowing.borrow_date).days
-                )
                 session = stripe.checkout.Session.create(
                     payment_method_types=["card"],
                     line_items=[
