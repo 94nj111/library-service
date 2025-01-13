@@ -16,7 +16,7 @@ def check_expired_sessions():
 
     for payment in pending_payments:
         try:
-            session: Session = stripe.checkout.Session.retrieve(payment.session_id)  # noqa
+            session: Session = stripe.checkout.Session.retrieve(payment.session_id)  # noqa 
             if timezone.now() > payment.created_at + timezone.timedelta(hours=24):
                 payment.status = "EXPIRED"
                 payment.save()

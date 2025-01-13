@@ -4,18 +4,18 @@ import stripe
 from django.db import transaction
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
-from rest_framework import status, mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from core.settings import STRIPE_SECRET_KEY
+from django.conf import settings
 from library_bot.bot import send_notification_on_success_payment
 from payment.models import Borrowing, Payment
 from payment.serializers import PaymentSerializer
 
-stripe.api_key = STRIPE_SECRET_KEY
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 FINE_MULTIPLIER = 2
 
@@ -32,7 +32,6 @@ class PaymentViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated,)
@@ -75,7 +74,6 @@ class PaymentViewSet(
                         * (borrowing.expected_return_date - borrowing.borrow_date).days
                     )
                 )
-
                 session = stripe.checkout.Session.create(
                     payment_method_types=["card"],
                     line_items=[

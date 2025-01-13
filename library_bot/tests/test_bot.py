@@ -30,15 +30,10 @@ class TestBot(TestCase):
 
         get_id(mock_message)
 
-        mock_send_message.assert_called_with(
-            1542351,
-            1542351
-        )
+        mock_send_message.assert_called_with(1542351, 1542351)
 
     @patch("library_bot.bot.bot.send_message")
-    def test_get_notification_on_borrowing_creation(
-        self, mock_get_users
-    ):
+    def test_get_notification_on_borrowing_creation(self, mock_get_users):
         mock_get_users.return_value = [1]
 
         self.borrowing = Borrowing.objects.create(
@@ -56,10 +51,7 @@ class TestBot(TestCase):
 
     @patch("borrowings_service.signals.send_notification_on_borrowing_created")
     @patch("library_bot.bot.bot.send_message")
-    def test_borrowing_overdue_check(
-        self, mock_send_message, mock_notification
-    ):
-
+    def test_borrowing_overdue_check(self, mock_send_message, mock_notification):
         borrowing = Borrowing.objects.create(
             borrow_date=timezone.now().date() - timezone.timedelta(days=1),
             expected_return_date=timezone.now().date() - timezone.timedelta(days=1),
