@@ -114,7 +114,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
         if borrowing.expected_return_date < timezone.now().date():
             return redirect(
-                reverse("payments:create-session", kwargs={"pk": borrowing.id})
+                reverse("payments:payments-create-session", kwargs={"pk": borrowing.id})
             )
 
         with transaction.atomic():
