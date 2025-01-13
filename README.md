@@ -1,3 +1,4 @@
+![alt text](localhost_8000_api_schema_swagger_.png)
 
 # Library Management System
 
@@ -27,8 +28,54 @@ This is a comprehensive Library Management System that allows users to borrow bo
 
 - Docker
 - Docker Compose
+- Python 3.10+
+- Poetry (for dependency management)
 
 ### Steps to Run the Project
+
+#### Running Locally
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd <project-directory>
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install dependencies using Poetry:
+   ```bash
+   poetry install
+   ```
+
+4. Apply database migrations:
+   ```bash
+   python manage.py migrate
+   ```
+
+5. Start Redis in a Docker container:
+   ```bash
+   docker run -d -p 6379:6379 redis
+   ```
+
+6. Run the Celery worker:
+   #### Linux/MacOS:
+   ```bash
+   celery -A core worker --loglevel=info
+   ```
+   #### Windows:
+   ```bash
+   celery -A core worker --app=app.app --pool=solo
+   ```
+
+7. Start the development server:
+   ```bash
+   python manage.py runserver
+
+#### Running with docker
 
 1. Clone the repository:
    ```bash
@@ -77,3 +124,5 @@ Once the server is running, you can access the API documentation using Swagger o
 - **GET** `/api/borrowings/` - List all borrowings of the logged-in user.
 - **POST** `/api/borrowings/` - Create a new borrowing.
 - **POST** `/api/payments/create-session/` - Create a Stripe payment session for a borrowing.
+
+![alt text](<Screenshot from 2025-01-13 14-45-32.png>)
