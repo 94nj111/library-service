@@ -1,15 +1,19 @@
-from rest_framework.test import APITestCase, APIClient
-from rest_framework import status
-from django.utils import timezone
-from borrowings_service.models import Borrowing
-from book_service.models import Book
+from decimal import Decimal
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
+
+from book_service.models import Book
+from borrowings_service.models import Borrowing
+from payment.models import Payment
 
 User = get_user_model()
 
 
 class BorrowingViewsTests(APITestCase):
-
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
@@ -31,7 +35,8 @@ class BorrowingViewsTests(APITestCase):
         response = self.client.get("/api/borrowings/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_create_borrowing(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_create_borrowing(self, mock_signal):
         self.client.force_authenticate(user=self.user)
         data = {
             "expected_return_date": timezone.now().date() + timezone.timedelta(days=7),
@@ -39,6 +44,30 @@ class BorrowingViewsTests(APITestCase):
         }
         response = self.client.post("/api/borrowings/", data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_create_borrowing_when_user_have_pending(self, mock_signal):
+        user = User.objects.create_user(email="user@user.com", password="password123")
+        borrowing = Borrowing.objects.create(
+            expected_return_date=timezone.now().date() + timezone.timedelta(days=7),
+            book=self.book,
+            user=user,
+        )
+        payment = Payment.objects.create(
+            status="PENDING",
+            type="PAYMENT",
+            borrowing=borrowing,
+            session_url="url",
+            session_id="id",
+            money_to_pay=Decimal("10"),
+        )
+        self.client.force_authenticate(user=user)
+        data = {
+            "expected_return_date": timezone.now().date() + timezone.timedelta(days=7),
+            "book": self.book.id,
+        }
+        response = self.client.post("/api/borrowings/", data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_permission_for_admin(self):
         self.client.force_authenticate(user=self.admin)
@@ -50,7 +79,8 @@ class BorrowingViewsTests(APITestCase):
         response = self.client.get("/api/borrowings/?user_id=1")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_filter_is_active(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_filter_is_active(self, mock_signal):
         self.client.force_authenticate(user=self.user)
         Borrowing.objects.create(
             borrow_date=timezone.now().date(),
@@ -62,7 +92,8 @@ class BorrowingViewsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    def test_filter_is_not_active(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_filter_is_not_active(self, mock_signal):
         self.client.force_authenticate(user=self.user)
         borrowing = Borrowing.objects.create(
             borrow_date=timezone.now().date(),
@@ -75,7 +106,8 @@ class BorrowingViewsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    def test_return_borrowing_success(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_return_borrowing_success(self, mock_signal):
         self.client.force_authenticate(user=self.user)
         borrowing = Borrowing.objects.create(
             borrow_date=timezone.now().date(),
@@ -91,7 +123,8 @@ class BorrowingViewsTests(APITestCase):
         borrowing.refresh_from_db()
         self.assertIsNotNone(borrowing.actual_return_date)
 
-    def test_return_borrowing_already_returned(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_return_borrowing_already_returned(self, mock_signal):
         self.client.force_authenticate(user=self.user)
         borrowing = Borrowing.objects.create(
             borrow_date=timezone.now().date(),
@@ -103,7 +136,8 @@ class BorrowingViewsTests(APITestCase):
         response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_return_borrowing_unauthorized_user(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_return_borrowing_unauthorized_user(self, mock_signal):
         self.client.force_authenticate(user=self.user)
         other_user = User.objects.create_user(
             email="other@example.com", password="password123"
@@ -117,7 +151,8 @@ class BorrowingViewsTests(APITestCase):
         response = self.client.post(f"/api/borrowings/{borrowing.id}/return/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_return_borrowing_admin_success(self):
+    @patch("django.db.models.signals.ModelSignal.send")
+    def test_return_borrowing_admin_success(self, mock_signal):
         self.client.force_authenticate(user=self.admin)
         borrowing = Borrowing.objects.create(
             borrow_date=timezone.now().date(),

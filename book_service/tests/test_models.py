@@ -1,6 +1,8 @@
-from django.test import TestCase
-from book_service.models import Book
 from decimal import Decimal
+
+from django.test import TestCase
+
+from book_service.models import Book
 
 
 class BookModelTest(TestCase):

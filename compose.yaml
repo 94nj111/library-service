@@ -1,5 +1,5 @@
 services:
-  cinema_service:
+  library-service:
     build:
       context: .
     env_file:
@@ -15,6 +15,10 @@ services:
       python manage.py runserver 0.0.0.0:8000"
     depends_on:
       - db
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
   db:
     image: postgres:14-alpine3.20
@@ -24,12 +28,53 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - my_db:$PGDATA
+      - my_db:/var/lib/postgresql/data
 
   redis:
     image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+
+  celery:
+    build:
+      context: .
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "celery -A core worker --loglevel=info"
+
+  celery_beat:
+    build:
+      context: .
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "celery -A core beat --loglevel=info"
+
+  bot:
+    build:
+      context: .
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "python library_bot/bot.py"
 
 volumes:
   my_db:
   my_media:
-
